@@ -1,0 +1,21 @@
+# Conduites à tenir en cas de suspicion d'arnaque
+# Structure uniquement. Conformément aux règles : SANS aucun vrai numéro ni vraie URL.
+# Valeurs laissées vides ("") et a_verifier systématiquement à true.
+
+- id: "conduite_suspicion_generale"
+  texte: "Ne communiquez aucun code secret ni identifiant personnel. En cas de doute, contactez le service client officiel de votre opérateur mobile money."
+  contacts:
+    - type: "service_client"
+      valeur: "" # TODO: Renseigner le contact vérifié officiel
+      source: "" # TODO: Source officielle du contact
+      date_source: "" # TODO: Date de vérification de la source
+      a_verifier: true
+
+- id: "conduite_compte_compromis"
+  texte: "Si vous avez partagé des informations confidentielles, faites immédiatement bloquer votre compte auprès de votre opérateur et modifiez votre code secret."
+  contacts:
+    - type: "urgence_fraude"
+      valeur: "" # TODO: Renseigner le contact d'urgence vérifié
+      source: "" # TODO: Source officielle
+      date_source: "" # TODO: Date de vérification
+      a_verifier: true

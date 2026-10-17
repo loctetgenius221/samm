@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "validate:data": "tsx scripts/validate-data.ts",
+    "eval": "tsx eval/run.ts"
   },
   "dependencies": {
     "next": "16.4.2",

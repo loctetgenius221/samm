@@ -7,8 +7,8 @@
   contacts:
     - type: "service_client"
       valeur: "" # TODO: Renseigner le contact vérifié officiel
-      source: "" # TODO: Source officielle du contact
-      date_source: "" # TODO: Date de vérification de la source
+      source: "Portail officiel opérateur (à vérifier)"
+      date_source: "TODO"
       a_verifier: true
 
 - id: "conduite_compte_compromis"
@@ -16,6 +16,6 @@
   contacts:
     - type: "urgence_fraude"
       valeur: "" # TODO: Renseigner le contact d'urgence vérifié
-      source: "" # TODO: Source officielle
-      date_source: "" # TODO: Date de vérification
+      source: "Portail d'assistance opérateur (à vérifier)"
+      date_source: "TODO"
       a_verifier: true

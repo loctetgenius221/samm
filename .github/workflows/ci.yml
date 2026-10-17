@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+# Garantit qu'aucun secret n'est requis et bloque toute élévation de permissions
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Intégration continue
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le code source
+        uses: actions/checkout@v4
+
+      - name: Configurer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Installation propre des dépendances
+        run: npm ci
+
+      - name: Vérification du lint
+        run: npm run lint
+
+      - name: Vérification des types TypeScript
+        run: npm run typecheck
+
+      - name: Compilation de l'application (Next.js build)
+        # Ne requiert aucune variable d'environnement ni secret
+        run: npm run build
+
+      - name: Validation des données (scams et conduite)
+        run: npm run validate:data
+
+      # TODO: Étape future pour mesurer les performances du Système A (règles seules, sans appel LLM)
+      # - name: Mesure du Système A (règles heuristiques seules)
+      #   run: npm run eval -- --system=rules

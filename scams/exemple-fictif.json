@@ -1,0 +1,16 @@
+{
+  "id": "scam_fictif_001",
+  "operateur": "EXEMPLE_FICTIF",
+  "langue": "fr",
+  "canal": "SMS",
+  "niveau": "danger",
+  "resume": "EXEMPLE FICTIF : Tentative de phishing prétendant le blocage d'un compte mobile money",
+  "exemple_masque": "ALERTE FICTIVE : Votre compte [OPERATEUR_MASQUE] sera suspendu. Cliquez sur [LIEN_MASQUE] ou confirmez votre code secret.",
+  "signaux": [
+    "Menace de suspension immédiate de compte",
+    "Demande de confirmation de code secret ou clic sur un lien externe"
+  ],
+  "conduite_id": "conduite_suspicion_generale",
+  "source": "EXEMPLE_FICTIF_DOCUMENTATION",
+  "date_source": "TODO"
+}

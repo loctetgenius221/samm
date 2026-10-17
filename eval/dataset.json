@@ -1,0 +1,5 @@
+{
+  "$description": "Structure du jeu de données d'évaluation pour Sàmm. Chaque item contient le texte d'entrée masqué, la source et le résultat attendu (niveau, signaux attendus, conduite_id attendu).",
+  "version": "1.0.0",
+  "items": []
+}

@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EntreeScam",
+  "description": "Schéma d'une entrée du corpus d'arnaques de Sàmm",
+  "type": "object",
+  "required": [
+    "id",
+    "operateur",
+    "langue",
+    "canal",
+    "niveau",
+    "resume",
+    "exemple_masque",
+    "signaux",
+    "conduite_id",
+    "source",
+    "date_source"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Identifiant unique de l'arnaque (ex: scam_0001)"
+    },
+    "operateur": {
+      "type": "string",
+      "description": "Opérateur de mobile money visé ou mentionné (ex: Wave, Orange Money, Free Money)"
+    },
+    "langue": {
+      "type": "string",
+      "description": "Langue du message (ex: fr, wo)"
+    },
+    "canal": {
+      "type": "string",
+      "description": "Canal de réception (ex: SMS, WhatsApp, Appel)"
+    },
+    "niveau": {
+      "type": "string",
+      "enum": ["danger", "suspect", "aucun_signal"],
+      "description": "Niveau de risque évalué (jamais le mot « sûr »)"
+    },
+    "resume": {
+      "type": "string",
+      "description": "Résumé succinct du scénario de l'arnaque"
+    },
+    "exemple_masque": {
+      "type": "string",
+      "description": "Exemple de message avec données sensibles (numéros, montants, noms) strictement masquées"
+    },
+    "signaux": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Liste de signaux ou indices caractéristiques"
+    },
+    "conduite_id": {
+      "type": "string",
+      "description": "Identifiant de la conduite à tenir associée définie dans conduite.yaml"
+    },
+    "source": {
+      "type": "string",
+      "description": "Origine du signalement ou corpus source"
+    },
+    "date_source": {
+      "type": "string",
+      "description": "Date du signalement (format AAAA-MM-JJ)"
+    }
+  },
+  "additionalProperties": false
+}

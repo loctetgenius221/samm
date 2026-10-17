@@ -1,0 +1,78 @@
+name: "Proposer une arnaque"
+description: "Signaler un nouveau message suspect ou une tentative d'arnaque mobile money"
+title: "[Arnaque] : "
+labels: ["arnaque", "corpus"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de contribuer à la protection de la communauté en signalant une tentative d'escroquerie.
+        ⚠️ **Règle impérative : Masquez systématiquement tous les numéros de téléphone, montants précis et identités personnelles avant de valider ce formulaire.**
+  - type: textarea
+    id: exemple_masque
+    attributes:
+      label: "Texte du message suspect (strictement masqué)"
+      description: "Collez le message en remplaçant les informations par [NUMÉRO_MASQUÉ], [MONTANT_MASQUÉ], [NOM_MASQUÉ] ou [LIEN_MASQUÉ]."
+      placeholder: "Exemple : ALERTE : Votre compte [OPERATEUR_MASQUE] sera suspendu. Cliquez sur [LIEN_MASQUÉ] pour confirmer votre code..."
+    validations:
+      required: true
+  - type: input
+    id: operateur
+    attributes:
+      label: "Opérateur mobile money concerné"
+      placeholder: "Exemple : Wave, Orange Money, Free Money"
+    validations:
+      required: true
+  - type: dropdown
+    id: canal
+    attributes:
+      label: "Canal de réception"
+      options:
+        - "SMS"
+        - "WhatsApp"
+        - "Appel vocal"
+        - "Autre"
+    validations:
+      required: true
+  - type: dropdown
+    id: langue
+    attributes:
+      label: "Langue principale du message"
+      options:
+        - "Français (fr)"
+        - "Wolof (wo)"
+        - "Autre / Mixte"
+    validations:
+      required: true
+  - type: textarea
+    id: resume
+    attributes:
+      label: "Résumé du mode opératoire"
+      description: "Résumez le procédé ou la ruse employée par l'escroc."
+      placeholder: "Exemple : Fausse notification prétendant un blocage imminent de compte..."
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: "Source du signalement"
+      description: "Origine du signalement (ex : Signalement personnel, Communauté locale)"
+      placeholder: "Exemple : Signalement personnel"
+    validations:
+      required: true
+  - type: input
+    id: date_source
+    attributes:
+      label: "Date d'observation (AAAA-MM-JJ)"
+      placeholder: "Exemple : 2026-10-17"
+    validations:
+      required: true
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: "Vérifications préalables"
+      options:
+        - label: "J'atteste avoir masqué tous les numéros de téléphone, montants et données personnelles identifiables."
+          required: true
+        - label: "Ce message correspond à un scénario suspect réel lié au mobile money."
+          required: true

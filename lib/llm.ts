@@ -1,4 +1,6 @@
 import { z } from "zod";
+import OpenAI from "openai";
+import { getLLMConfig } from "@/lib/config";
 
 /**
  * Schéma Zod pour valider strictement la sortie produite par le modèle de langage.
@@ -28,6 +30,20 @@ export function buildCacheKey(promptVersion: string, message: string): string {
 }
 
 /**
+ * Initialise le client OpenAI pointant vers l'API compatible du fournisseur (Groq ou Cerebras).
+ * L'adresse officielle OpenAI de Groq est : https://api.groq.com/openai/v1
+ * 
+ * @returns Client OpenAI configuré avec l'URL de base et la clé d'API
+ */
+export function getLLMClient(): OpenAI {
+  const config = getLLMConfig();
+  return new OpenAI({
+    baseURL: config.baseUrl,
+    apiKey: config.apiKey,
+  });
+}
+
+/**
  * Analyse un message masqué à l'aide d'un LLM avec mise en cache des réponses.
  * La réponse est systématiquement validée par le schéma Zod.
  * 
@@ -48,8 +64,10 @@ export async function analyzeWithLLM(
   }
 
   // TODO: Préparer le prompt système et utilisateur selon la version spécifiée
-  // TODO: Appeler l'API du fournisseur LLM configuré
-  // TODO: Parser la réponse JSON du LLM
+  // TODO: Effectuer l'appel chat completion via getLLMClient() :
+  // const client = getLLMClient();
+  // const config = getLLMConfig();
+  // const completion = await client.chat.completions.create({ model: config.model, messages: [...] });
 
   // Sortie stub validée pour initialisation
   const stubOutput: LLMOutput = {

@@ -68,6 +68,7 @@ export function AnalyseForm({ onResultat, onChargementChange }: AnalyseFormProps
           signaux: data.signaux,
           explication: data.explication,
           conduiteTexte: data.conduite?.texte || CONDUITE_SECOURS_CLIENT,
+          conduiteContacts: data.conduite?.contacts || [],
           estErreur: false,
         });
       }

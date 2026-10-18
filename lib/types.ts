@@ -21,6 +21,7 @@ export interface ArnaqueProche {
   id: string;
   score: number;
   resume?: string;
+  signaux?: string[];
 }
 
 /**

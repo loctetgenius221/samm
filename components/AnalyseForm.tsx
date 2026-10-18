@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { maskText } from "@/lib/mask";
-import { getTexteConduite } from "@/lib/conduite";
 import type { AnalyseRequest, AnalyseResponse, AnalyseErrorResponse } from "@/lib/types";
 import type { ResultatAffichage } from "./ResultZone";
+
+const CONDUITE_SECOURS_CLIENT =
+  "Ne communiquez aucun code secret ni identifiant personnel. En cas de doute, contactez le service client officiel de votre opérateur mobile money.";
 
 interface AnalyseFormProps {
   onResultat: (res: ResultatAffichage) => void;
@@ -53,7 +55,7 @@ export function AnalyseForm({ onResultat, onChargementChange }: AnalyseFormProps
           signaux: ["Échec de communication avec le service d'analyse"],
           explication:
             "L'analyse n'a pas pu être complétée par le serveur. Par mesure de précaution, traitez ce message comme suspect.",
-          conduiteTexte: getTexteConduite("conduite_suspicion_generale"),
+          conduiteTexte: CONDUITE_SECOURS_CLIENT,
           estErreur: true,
           messageErreur:
             errorData.message ||
@@ -65,7 +67,7 @@ export function AnalyseForm({ onResultat, onChargementChange }: AnalyseFormProps
           niveau: data.niveau,
           signaux: data.signaux,
           explication: data.explication,
-          conduiteTexte: getTexteConduite(data.conduite_id),
+          conduiteTexte: data.conduite?.texte || CONDUITE_SECOURS_CLIENT,
           estErreur: false,
         });
       }
@@ -76,7 +78,7 @@ export function AnalyseForm({ onResultat, onChargementChange }: AnalyseFormProps
         signaux: ["Connexion impossible au serveur d'analyse"],
         explication:
           "Impossible de joindre le serveur pour analyser le message. Dans le doute, considérez le contenu comme suspect.",
-        conduiteTexte: getTexteConduite("conduite_suspicion_generale"),
+        conduiteTexte: CONDUITE_SECOURS_CLIENT,
         estErreur: true,
         messageErreur:
           "Une erreur réseau est survenue. Par précaution, nous appliquons un niveau suspect.",

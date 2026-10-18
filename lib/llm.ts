@@ -239,12 +239,14 @@ const FALLBACK_OUTPUT: LLMOutput = {
  * @param texteMasque Message préalablement anonymisé
  * @param signauxRegles Signaux identifiés par le moteur de règles
  * @param arnaquesProches Arnaques similaires trouvées dans le corpus
+ * @param conduiteIds Liste des identifiants de conduites autorisées
  * @returns Promesse contenant la sortie validée par Zod
  */
 export async function analyzeWithLLM(
   texteMasque: string,
   signauxRegles: SignalRegle[] = [],
-  arnaquesProches: ArnaqueProche[] = []
+  arnaquesProches: ArnaqueProche[] = [],
+  conduiteIds?: string[]
 ): Promise<LLMOutput> {
   const cacheKey = buildCacheKey(VERSION_PROMPT, texteMasque);
 
@@ -262,7 +264,7 @@ export async function analyzeWithLLM(
   }
 
   // 3. Construction des messages
-  const systemPrompt = buildSystemPrompt(signauxRegles, arnaquesProches);
+  const systemPrompt = buildSystemPrompt(signauxRegles, arnaquesProches, conduiteIds);
   const userMessage = buildUserMessage(texteMasque);
 
   // 4. Appel au modèle avec relance et bascule

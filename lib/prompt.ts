@@ -25,11 +25,13 @@ export interface ArnaqueContexte {
 
 /**
  * Génère le prompt système pour l'analyse d'un message suspect.
- * Injecte dynamiquement les signaux des règles heuristiques et les arnaques proches.
+ * Injecte dynamiquement les signaux des règles heuristiques, les arnaques proches
+ * et la liste des conduites autorisées de conduite.yaml.
  */
 export function buildSystemPrompt(
   signauxRegles: SignalRegle[],
-  arnaquesProches: ArnaqueContexte[]
+  arnaquesProches: ArnaqueContexte[],
+  conduiteIds?: string[]
 ): string {
   const signauxSection =
     signauxRegles.length > 0
@@ -45,6 +47,9 @@ export function buildSystemPrompt(
           })
           .join("\n")}\n`
       : "\nAucune arnaque similaire trouvée dans le corpus.\n";
+
+  const conduitesCibles =
+    conduiteIds && conduiteIds.length > 0 ? conduiteIds : CONDUITES_DISPONIBLES;
 
   return `Tu es un assistant spécialisé dans la détection des arnaques et tentatives de fraude mobile money au Sénégal (Wave, Orange Money, Free Money, etc.).
 
@@ -71,7 +76,7 @@ Contraintes sur la réponse :
 - « niveau » : uniquement « danger », « suspect » ou « aucun_signal ».
 - « signaux » : liste de 1 à 3 descriptions courtes des indices détectés.
 - « explication » : en français simple, compréhensible par tout utilisateur, 60 mots maximum. Pas de jargon. Pas de numéro, pas d'URL, pas de montant.
-- « conduite_id » : choisis UNIQUEMENT parmi : ${CONDUITES_DISPONIBLES.map((c) => `"${c}"`).join(", ")}.
+- « conduite_id » : choisis UNIQUEMENT parmi : ${conduitesCibles.map((c) => `"${c}"`).join(", ")}.
 
 CONTEXTE SUPPLÉMENTAIRE (à utiliser, ne pas recopier) :
 ${signauxSection}${arnaquesSection}`;

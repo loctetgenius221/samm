@@ -1,12 +1,13 @@
 "use client";
 
-import type { NiveauAlerte } from "@/lib/types";
+import type { NiveauAlerte, ContactConduite } from "@/lib/types";
 
 export interface ResultatAffichage {
   niveau: NiveauAlerte;
   signaux: string[];
   explication: string;
   conduiteTexte: string;
+  conduiteContacts?: ContactConduite[];
   estErreur?: boolean;
   messageErreur?: string;
 }
@@ -140,15 +141,45 @@ export function ResultZone({ resultat, enChargement }: ResultZoneProps) {
         </div>
       )}
 
-      {/* Conduite à tenir */}
+      {/* Conduite à tenir (texte et contacts) */}
       {resultat.conduiteTexte && (
-        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 space-y-1.5">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-amber-400">
-            Conduite à tenir
-          </h3>
-          <p className="text-sm leading-relaxed text-slate-200">
-            {resultat.conduiteTexte}
-          </p>
+        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 space-y-3">
+          <div className="space-y-1.5">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-amber-400">
+              Conduite à tenir
+            </h3>
+            <p className="text-sm leading-relaxed text-slate-200">
+              {resultat.conduiteTexte}
+            </p>
+          </div>
+
+          {resultat.conduiteContacts && resultat.conduiteContacts.length > 0 && (
+            <div className="border-t border-slate-800/80 pt-3 space-y-2">
+              <h4 className="text-xs font-semibold text-slate-400">
+                Contacts d&apos;assistance officiels vérifiés :
+              </h4>
+              <ul className="space-y-1.5">
+                {resultat.conduiteContacts.map((contact, index) => (
+                  <li
+                    key={index}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-950/60 px-3 py-2 text-xs"
+                  >
+                    <span className="font-medium text-slate-300 capitalize">
+                      {contact.type.replace(/_/g, " ")} :
+                    </span>
+                    <span className="font-mono text-amber-300">
+                      {contact.valeur}
+                    </span>
+                    {contact.source && (
+                      <span className="text-[10px] text-slate-500">
+                        (source : {contact.source})
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 

@@ -21,6 +21,7 @@ export interface ArnaqueProche {
   id: string;
   score: number;
   resume?: string;
+  signaux?: string[];
 }
 
 /**
@@ -30,6 +31,15 @@ export interface ArnaqueProche {
 export interface AnalyseRequest {
   texte: string;
   source: SourceAnalyse;
+}
+
+/**
+ * Conduite à tenir retournée dans la réponse d'analyse pour l'affichage utilisateur.
+ * Contient le texte et uniquement les contacts officiellement vérifiés.
+ */
+export interface ConduiteAffichee {
+  texte: string;
+  contacts: ContactConduite[];
 }
 
 /**
@@ -44,6 +54,8 @@ export interface AnalyseResponse {
   explication: string;
   /** Identifiant de conduite qui doit exister dans conduite.yaml */
   conduite_id: string;
+  /** Objet conduite avec texte et contacts vérifiés (a_verifier === false) uniquement */
+  conduite: ConduiteAffichee;
   /** Liste des arnaques proches avec leur score */
   arnaques_proches: ArnaqueProche[];
   /** Version du prompt utilisé pour l'analyse */

@@ -1,0 +1,14 @@
+[
+  {
+    "texte": "Bonjour, votre compte a ete suspendu. Envoyez le code recu par SMS au 77 000 00 00 dans les 24h sinon votre argent sera perdu.",
+    "attendu": "danger"
+  },
+  {
+    "texte": "Felicitations vous avez gagne un telephone Samsung Galaxy ! Cliquez ici pour reclamer votre prix : bit.ly/faux-lien",
+    "attendu": "suspect"
+  },
+  {
+    "texte": "Votre facture Senelec de mai est disponible. Montant : 15 200 FCFA. Payez avant le 30 juin.",
+    "attendu": "aucun_signal"
+  }
+]

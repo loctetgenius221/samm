@@ -42,6 +42,43 @@ export interface LLMConfig {
 }
 
 /**
+ * Configuration du fournisseur de secours pour la bascule automatique.
+ * Retourne null si le second fournisseur n'est pas configuré.
+ */
+export function getFallbackConfig(): LLMConfig | null {
+  const primary = process.env.LLM_PROVIDER || "groq";
+  const fallback = primary === "groq" ? "cerebras" : "groq";
+
+  const fallbackKey =
+    fallback === "groq"
+      ? process.env.GROQ_API_KEY
+      : process.env.CEREBRAS_API_KEY;
+
+  if (!fallbackKey || fallbackKey.trim().length === 0) {
+    return null;
+  }
+
+  const defaultBaseUrls = {
+    groq: "https://api.groq.com/openai/v1",
+    cerebras: "https://api.cerebras.ai/v1",
+  };
+
+  return {
+    provider: fallback as "groq" | "cerebras",
+    model: process.env.LLM_MODEL || "openai/gpt-oss-120b",
+    baseUrl: defaultBaseUrls[fallback],
+    apiKey: fallbackKey,
+  };
+}
+
+/**
+ * Indique si le cache sur disque est activé (pour l'évaluation uniquement).
+ */
+export function isDiskCacheEnabled(): boolean {
+  return process.env.ENABLE_DISK_CACHE === "true";
+}
+
+/**
  * Lit et valide la configuration du LLM à partir des variables d'environnement.
  * Règle importante : cette fonction ne doit être appelée qu'à l'exécution de l'API, jamais à l'import ni au build.
  * 

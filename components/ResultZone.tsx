@@ -1,6 +1,8 @@
 "use client";
 
-import type { NiveauAlerte, ContactConduite } from "@/lib/types";
+import { useEffect, useRef } from "react";
+import type { ContactConduite, NiveauAlerte } from "@/lib/types";
+import { Icone, type NomIcone } from "./Icone";
 
 export interface ResultatAffichage {
   niveau: NiveauAlerte;
@@ -8,203 +10,115 @@ export interface ResultatAffichage {
   explication: string;
   conduiteTexte: string;
   conduiteContacts?: ContactConduite[];
-  estErreur?: boolean;
-  messageErreur?: string;
+}
+
+const VERDICTS: Record<NiveauAlerte, { titre: string; consigne: string; icone: NomIcone; couleurs: string }> = {
+  danger: {
+    titre: "Danger",
+    consigne: "C'est très probablement une arnaque. Ne répondez pas, n'envoyez ni argent ni code.",
+    icone: "danger",
+    couleurs: "bg-danger text-sur-danger",
+  },
+  suspect: {
+    titre: "Suspect",
+    consigne: "Ne faites rien avant d'avoir vérifié auprès de votre opérateur.",
+    icone: "suspect",
+    couleurs: "bg-suspect text-sur-suspect",
+  },
+  aucun_signal: {
+    titre: "Aucun signal détecté",
+    consigne: "Sàmm n'a rien repéré, mais aucun outil ne garantit qu'un message est sans risque.",
+    icone: "info",
+    couleurs: "bg-neutre text-sur-neutre",
+  },
+};
+
+const lienContact = (valeur: string): string => {
+  if (/^https?:\/\//.test(valeur)) return valeur;
+  return /[a-z]\.[a-z]/i.test(valeur) ? `https://${valeur}` : `tel:${valeur.replace(/\s/g, "")}`;
+};
+
+function partager(titre: string, signaux: string[]) {
+  const texte = `Sàmm a classé un message comme « ${titre} » : ${signaux.join(", ")}. Vérifiez vos messages suspects sur ${location.origin}`;
+  if (navigator.share) {
+    navigator.share({ text: texte }).catch(() => undefined);
+    return;
+  }
+  window.open(`https://wa.me/?text=${encodeURIComponent(texte)}`, "_blank", "noopener");
 }
 
 interface ResultZoneProps {
-  resultat: ResultatAffichage | null;
-  enChargement: boolean;
+  resultat: ResultatAffichage;
+  onRecommencer: () => void;
 }
 
-export function ResultZone({ resultat, enChargement }: ResultZoneProps) {
-  if (enChargement) {
-    return (
-      <section
-        aria-live="polite"
-        className="w-full rounded-2xl border border-slate-800 bg-slate-900/60 p-6 text-center backdrop-blur"
-      >
-        <div className="flex flex-col items-center justify-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-700 border-t-amber-400" />
-          <p className="text-sm font-medium text-slate-300">
-            Analyse des signaux en cours...
-          </p>
-        </div>
-      </section>
-    );
-  }
+export function ResultZone({ resultat, onRecommencer }: ResultZoneProps) {
+  const titre = useRef<HTMLHeadingElement>(null);
+  const verdict = VERDICTS[resultat.niveau];
 
-  if (!resultat) {
-    return null;
-  }
-
-  // Configuration du niveau avec symbole et texte explicite (pas uniquement une couleur)
-  const configNiveau: Record<
-    NiveauAlerte,
-    {
-      symbole: string;
-      texte: string;
-      badgeClasses: string;
-      cardClasses: string;
-    }
-  > = {
-    danger: {
-      symbole: "🛑",
-      texte: "DANGER",
-      badgeClasses: "bg-red-950/80 text-red-200 border-red-700/60",
-      cardClasses: "border-red-900/50 bg-red-950/20",
-    },
-    suspect: {
-      symbole: "⚠️",
-      texte: "SUSPECT",
-      badgeClasses: "bg-amber-950/80 text-amber-200 border-amber-700/60",
-      cardClasses: "border-amber-900/50 bg-amber-950/20",
-    },
-    aucun_signal: {
-      symbole: "ℹ️",
-      texte: "AUCUN SIGNAL DÉTECTÉ",
-      badgeClasses: "bg-slate-800 text-slate-200 border-slate-700",
-      cardClasses: "border-slate-800 bg-slate-900/40",
-    },
-  };
-
-  const niveauActuel = configNiveau[resultat.niveau];
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    titre.current?.focus();
+  }, []);
 
   return (
-    <section
-      aria-live="polite"
-      className={`w-full space-y-5 rounded-2xl border p-5 sm:p-6 backdrop-blur transition-all ${niveauActuel.cardClasses}`}
-    >
-      {/* En-tête du résultat avec Symbole et Texte */}
-      <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
-        <div>
-          <span className="text-xs uppercase tracking-wider text-slate-400">
-            Verdict d&apos;analyse
-          </span>
-          <div className="mt-1 flex items-center gap-2">
-            <span
-              className="text-2xl"
-              role="img"
-              aria-label={`Symbole ${niveauActuel.texte}`}
-            >
-              {niveauActuel.symbole}
-            </span>
-            <span
-              className={`inline-flex items-center rounded-lg border px-3 py-1 text-sm font-bold tracking-wide ${niveauActuel.badgeClasses}`}
-            >
-              {niveauActuel.symbole} {niveauActuel.texte}
-            </span>
-          </div>
-        </div>
-      </div>
+    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col">
+      <section
+        className={`animate-verdict rounded-b-[2rem] px-5 pt-10 pb-8 motion-reduce:animate-none ${verdict.couleurs}`}
+      >
+        <Icone nom={verdict.icone} className="size-14" />
+        <h1 ref={titre} tabIndex={-1} className="mt-4 text-[2.75rem] leading-none font-extrabold tracking-tight outline-none">
+          {verdict.titre}
+        </h1>
+        <p className="mt-4 text-lg leading-snug font-bold">{verdict.consigne}</p>
+      </section>
 
-      {/* Message spécifique en cas d'erreur de l'API */}
-      {resultat.estErreur && (
-        <div className="rounded-xl border border-amber-700/50 bg-amber-950/40 p-4 text-xs text-amber-200">
-          <p className="font-semibold">Information de service :</p>
-          <p className="mt-1">
-            {resultat.messageErreur ||
-              "L'analyse approfondie n'a pas pu aboutir. Par précaution, ce contenu est classé comme suspect."}
-          </p>
-        </div>
-      )}
-
-      {/* Signaux identifiés */}
-      {resultat.signaux.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Signaux repérés
-          </h3>
-          <ul className="space-y-1.5">
-            {resultat.signaux.map((signal, index) => (
-              <li
-                key={index}
-                className="flex items-start gap-2 text-sm text-slate-200"
-              >
-                <span className="mt-1 text-xs text-slate-500">•</span>
-                <span>{signal}</span>
+      <main className="flex-1 space-y-8 px-5 pt-8 pb-4">
+        <section aria-labelledby="pourquoi">
+          <h2 id="pourquoi" className="text-[1.375rem] font-extrabold">
+            Pourquoi
+          </h2>
+          <ul className="mt-3 space-y-2">
+            {resultat.signaux.map((signal) => (
+              <li key={signal} className="flex gap-3 font-bold">
+                <span className="mt-2.5 size-2 shrink-0 rounded-full bg-marque" aria-hidden="true" />
+                {signal}
               </li>
             ))}
           </ul>
-        </div>
-      )}
+          <p className="mt-4 text-encre-douce">{resultat.explication}</p>
+        </section>
 
-      {/* Explication en français simple */}
-      {resultat.explication && (
-        <div className="space-y-2">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Explication
-          </h3>
-          <p className="text-sm leading-relaxed text-slate-300">
-            {resultat.explication}
-          </p>
-        </div>
-      )}
+        <section aria-labelledby="que-faire">
+          <h2 id="que-faire" className="text-[1.375rem] font-extrabold">
+            Que faire
+          </h2>
+          <p className="mt-3">{resultat.conduiteTexte}</p>
+          {resultat.conduiteContacts?.map((contact) => (
+            <a
+              key={contact.valeur}
+              href={lienContact(contact.valeur)}
+              className="mt-3 flex items-center gap-3 rounded-2xl border-2 border-trait bg-carte p-4"
+            >
+              <Icone nom={lienContact(contact.valeur).startsWith("tel:") ? "telephone" : "lien"} className="size-6 text-marque" />
+              <span>
+                <span className="block font-bold">{contact.valeur}</span>
+                <span className="block text-sm text-encre-douce">Source : {contact.source}</span>
+              </span>
+            </a>
+          ))}
+        </section>
+      </main>
 
-      {/* Conduite à tenir (texte et contacts) */}
-      {resultat.conduiteTexte && (
-        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 space-y-3">
-          <div className="space-y-1.5">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-amber-400">
-              Conduite à tenir
-            </h3>
-            <p className="text-sm leading-relaxed text-slate-200">
-              {resultat.conduiteTexte}
-            </p>
-          </div>
-
-          {resultat.conduiteContacts && resultat.conduiteContacts.length > 0 && (
-            <div className="border-t border-slate-800/80 pt-3 space-y-2">
-              <h4 className="text-xs font-semibold text-slate-400">
-                Contacts d&apos;assistance officiels vérifiés :
-              </h4>
-              <ul className="space-y-1.5">
-                {resultat.conduiteContacts.map((contact, index) => (
-                  <li
-                    key={index}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-950/60 px-3 py-2 text-xs"
-                  >
-                    <span className="font-medium text-slate-300 capitalize">
-                      {contact.type.replace(/_/g, " ")} :
-                    </span>
-                    <span className="font-mono text-amber-300">
-                      {contact.valeur}
-                    </span>
-                    {contact.source && (
-                      <span className="text-[10px] text-slate-500">
-                        (source : {contact.source})
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Actions complémentaires (désactivées avec TODO) */}
-      <div className="flex flex-col gap-2 pt-2 sm:flex-row">
-        {/* TODO: Implémenter le partage d'alerte vers les réseaux / WhatsApp */}
-        <button
-          type="button"
-          disabled
-          aria-disabled="true"
-          className="flex-1 rounded-xl border border-slate-800 bg-slate-900/50 px-4 py-2.5 text-xs font-medium text-slate-500 cursor-not-allowed opacity-60"
-        >
-          Partager l&apos;alerte (Bientôt disponible)
+      <footer className="sticky bottom-0 space-y-3 bg-fond/90 px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] backdrop-blur">
+        <button type="button" onClick={() => partager(verdict.titre, resultat.signaux)} className="bouton bouton-secondaire">
+          <Icone nom="partager" />
+          Partager l&apos;alerte
         </button>
-
-        {/* TODO: Permettre à l'utilisateur de soumettre l'arnaque pour enrichir le corpus scams/ */}
-        <button
-          type="button"
-          disabled
-          aria-disabled="true"
-          className="flex-1 rounded-xl border border-slate-800 bg-slate-900/50 px-4 py-2.5 text-xs font-medium text-slate-500 cursor-not-allowed opacity-60"
-        >
-          Proposer cette arnaque (Bientôt disponible)
+        <button type="button" onClick={onRecommencer} className="bouton bouton-principal">
+          Vérifier un autre message
         </button>
-      </div>
-    </section>
+      </footer>
+    </div>
   );
 }

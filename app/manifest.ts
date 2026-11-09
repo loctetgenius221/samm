@@ -1,35 +1,20 @@
 import type { MetadataRoute } from "next";
 
-/**
- * Manifeste PWA de Sàmm généré nativement par Next.js.
- */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Sàmm",
     short_name: "Sàmm",
-    description: "Protection et repérage des arnaques mobile money au Sénégal",
+    description: "Vérifiez un message suspect avant d'envoyer de l'argent ou un code.",
     start_url: "/",
     display: "standalone",
-    background_color: "#0f172a",
-    theme_color: "#0f172a",
+    orientation: "portrait",
+    background_color: "#f4f5fa",
+    theme_color: "#f4f5fa",
     lang: "fr",
     icons: [
-      {
-        src: "/icons/icon-192.png",
-        sizes: "192x192",
-        type: "image/png",
-      },
-      {
-        src: "/icons/icon-512.png",
-        sizes: "512x512",
-        type: "image/png",
-      },
-      {
-        src: "/icons/icon-maskable-512.png",
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "maskable",
-      },
+      { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+      { src: "/icons/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }

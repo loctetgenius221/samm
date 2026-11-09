@@ -1,26 +1,79 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --fond: #f4f5fa;
+  --carte: #ffffff;
+  --encre: #1c1e42;
+  --encre-douce: #555874;
+  --trait: #dcdfeb;
+  --marque: #2d2f8f;
+  --sur-marque: #ffffff;
+  --danger: #c4231a;
+  --sur-danger: #ffffff;
+  --suspect: #f2a900;
+  --sur-suspect: #241a00;
+  --neutre: #e3e7f0;
+  --sur-neutre: #1c1e42;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --fond: #111230;
+    --carte: #1b1d40;
+    --encre: #eef0ff;
+    --encre-douce: #a9acca;
+    --trait: #2f3263;
+    --marque: #9ea3ff;
+    --sur-marque: #111230;
+    --neutre: #2a2f55;
+    --sur-neutre: #eef0ff;
+  }
+}
+
+@theme inline {
+  --color-fond: var(--fond);
+  --color-carte: var(--carte);
+  --color-encre: var(--encre);
+  --color-encre-douce: var(--encre-douce);
+  --color-trait: var(--trait);
+  --color-marque: var(--marque);
+  --color-sur-marque: var(--sur-marque);
+  --color-danger: var(--danger);
+  --color-sur-danger: var(--sur-danger);
+  --color-suspect: var(--suspect);
+  --color-sur-suspect: var(--sur-suspect);
+  --color-neutre: var(--neutre);
+  --color-sur-neutre: var(--sur-neutre);
+  --font-sans: var(--font-atkinson);
+  --animate-verdict: verdict 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes verdict {
+  from {
+    transform: translateY(-24px);
+    opacity: 0;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--fond);
+  color: var(--encre);
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@layer components {
+  .bouton {
+    @apply flex min-h-14 w-full cursor-pointer items-center justify-center gap-2 rounded-full px-6 font-bold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none;
+    @apply focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-marque;
+  }
+
+  .bouton-principal {
+    @apply bg-marque text-sur-marque;
+  }
+
+  .bouton-secondaire {
+    @apply border-2 border-trait bg-carte text-encre;
+  }
 }

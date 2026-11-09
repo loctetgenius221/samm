@@ -3,172 +3,173 @@
 import { useState } from "react";
 import { maskText } from "@/lib/mask";
 import { readText } from "@/lib/ocr";
-import type { AnalyseRequest, AnalyseResponse, AnalyseErrorResponse, SourceAnalyse } from "@/lib/types";
+import type { AnalyseRequest, AnalyseResponse, SourceAnalyse } from "@/lib/types";
+import { Icone } from "./Icone";
+import { Logo } from "./Logo";
 import type { ResultatAffichage } from "./ResultZone";
 
-const CONDUITE_SECOURS_CLIENT =
-  "Ne communiquez aucun code secret ni identifiant personnel. En cas de doute, contactez le service client officiel de votre opérateur mobile money.";
+const DEPOT = "https://github.com/loctetgenius221/samm";
 
-interface AnalyseFormProps {
-  onResultat: (res: ResultatAffichage) => void;
-  onChargementChange: (enCours: boolean) => void;
+const CONDUITE_SECOURS =
+  "Ne communiquez aucun code secret. En cas de doute, appelez le service client officiel de votre opérateur.";
+
+const RESULTAT_INDISPONIBLE: ResultatAffichage = {
+  niveau: "suspect",
+  signaux: ["Vérification impossible pour le moment"],
+  explication: "Sàmm n'a pas pu joindre son service d'analyse. Par précaution, considérez ce message comme suspect.",
+  conduiteTexte: CONDUITE_SECOURS,
+};
+
+async function analyser(texte: string, source: SourceAnalyse): Promise<ResultatAffichage> {
+  const requete: AnalyseRequest = { texte: maskText(texte), source };
+  const reponse = await fetch("/api/analyse", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(requete),
+  });
+  if (!reponse.ok) return RESULTAT_INDISPONIBLE;
+
+  const donnees = (await reponse.json()) as AnalyseResponse;
+  return {
+    niveau: donnees.niveau,
+    signaux: donnees.signaux,
+    explication: donnees.explication,
+    conduiteTexte: donnees.conduite?.texte || CONDUITE_SECOURS,
+    conduiteContacts: donnees.conduite?.contacts ?? [],
+  };
 }
 
-export function AnalyseForm({ onResultat, onChargementChange }: AnalyseFormProps) {
+export function AnalyseForm({ onResultat }: { onResultat: (resultat: ResultatAffichage) => void }) {
   const [texte, setTexte] = useState("");
-  const [erreurSaisie, setErreurSaisie] = useState<string | null>(null);
-  const [chargement, setChargement] = useState(false);
   const [source, setSource] = useState<SourceAnalyse>("texte");
-  const [lectureCapture, setLectureCapture] = useState(false);
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [occupation, setOccupation] = useState<"lecture" | "verification" | null>(null);
+
+  function remplir(valeur: string, origine: SourceAnalyse) {
+    setTexte(valeur);
+    setSource(origine);
+    setErreur(null);
+  }
+
+  async function coller() {
+    try {
+      const contenu = await navigator.clipboard.readText();
+      if (!contenu.trim()) throw new Error("presse-papiers vide");
+      remplir(contenu, "texte");
+    } catch {
+      setErreur("Collage impossible. Appuyez longuement dans la zone de texte, puis choisissez Coller.");
+    }
+  }
 
   async function lireCapture(e: React.ChangeEvent<HTMLInputElement>) {
     const image = e.target.files?.[0];
     e.target.value = "";
     if (!image) return;
 
-    setErreurSaisie(null);
-    setLectureCapture(true);
+    setOccupation("lecture");
     try {
       const texteLu = await readText(image);
       if (!texteLu) throw new Error("aucun texte");
-      setTexte(texteLu);
-      setSource("capture");
+      remplir(texteLu, "capture");
     } catch {
-      setErreurSaisie("Impossible de lire le texte de cette capture. Colle le message à la place.");
+      setErreur("Aucun texte lisible sur cette image. Essayez une capture plus nette ou collez le message.");
     } finally {
-      setLectureCapture(false);
+      setOccupation(null);
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-
+  async function verifier() {
     if (!texte.trim()) {
-      setErreurSaisie("Veuillez coller ou saisir le message suspect à analyser.");
+      setErreur("Collez d'abord le message à vérifier.");
       return;
     }
-
-    setErreurSaisie(null);
-    setChargement(true);
-    onChargementChange(true);
-
+    setOccupation("verification");
     try {
-      // Masquage préalable des données sensibles côté client
-      const texteMasque = maskText(texte);
-
-      const payload: AnalyseRequest = {
-        texte: texteMasque,
-        source,
-      };
-
-      const res = await fetch("/api/analyse", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const errorData = (await res.json().catch(() => ({}))) as Partial<AnalyseErrorResponse>;
-        // Règle : Si l'API échoue, on affiche « suspect » par défaut avec un message d'erreur clair
-        onResultat({
-          niveau: "suspect",
-          signaux: ["Échec de communication avec le service d'analyse"],
-          explication:
-            "L'analyse n'a pas pu être complétée par le serveur. Par mesure de précaution, traitez ce message comme suspect.",
-          conduiteTexte: CONDUITE_SECOURS_CLIENT,
-          estErreur: true,
-          messageErreur:
-            errorData.message ||
-            "Le service d'analyse est momentanément indisponible. Le verdict 'suspect' est appliqué par précaution.",
-        });
-      } else {
-        const data = (await res.json()) as AnalyseResponse;
-        onResultat({
-          niveau: data.niveau,
-          signaux: data.signaux,
-          explication: data.explication,
-          conduiteTexte: data.conduite?.texte || CONDUITE_SECOURS_CLIENT,
-          conduiteContacts: data.conduite?.contacts || [],
-          estErreur: false,
-        });
-      }
+      onResultat(await analyser(texte, source));
     } catch {
-      // Erreur réseau ou exception imprévue
-      onResultat({
-        niveau: "suspect",
-        signaux: ["Connexion impossible au serveur d'analyse"],
-        explication:
-          "Impossible de joindre le serveur pour analyser le message. Dans le doute, considérez le contenu comme suspect.",
-        conduiteTexte: CONDUITE_SECOURS_CLIENT,
-        estErreur: true,
-        messageErreur:
-          "Une erreur réseau est survenue. Par précaution, nous appliquons un niveau suspect.",
-      });
+      onResultat(RESULTAT_INDISPONIBLE);
     } finally {
-      setChargement(false);
-      onChargementChange(false);
+      setOccupation(null);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-4">
-      {/* Champ de saisie du message */}
-      <div className="space-y-2">
-        <label
-          htmlFor="message-suspect"
-          className="block text-sm font-semibold text-slate-200"
-        >
-          Colle le message suspect
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        void verifier();
+      }}
+      className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5"
+    >
+      <header className="py-4">
+        <Logo />
+      </header>
+
+      <main className="flex-1 pt-6">
+        <h1 className="text-[1.875rem] leading-tight font-extrabold tracking-tight text-balance">
+          Un message vous paraît louche ?
+        </h1>
+        <p className="mt-2 text-encre-douce">
+          Collez-le ou ajoutez une capture d&apos;écran. Sàmm vous dit s&apos;il faut vous méfier.
+        </p>
+
+        <label htmlFor="message-suspect" className="sr-only">
+          Message à vérifier
         </label>
         <textarea
           id="message-suspect"
-          name="message"
-          rows={5}
           value={texte}
-          onChange={(e) => {
-            setTexte(e.target.value);
-            if (!e.target.value) setSource("texte");
-            if (erreurSaisie) setErreurSaisie(null);
-          }}
-          placeholder="Exemple : Félicitations, vous avez reçu un gain de... Transférez le code..."
-          className="w-full resize-none rounded-xl border border-slate-800 bg-slate-900/90 p-4 text-sm text-slate-100 placeholder-slate-500 shadow-inner outline-none transition focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
-          aria-describedby={erreurSaisie ? "erreur-saisie" : undefined}
+          onChange={(e) => remplir(e.target.value, e.target.value ? source : "texte")}
+          placeholder="Collez le message ici"
+          rows={6}
+          aria-describedby={erreur ? "erreur-saisie" : undefined}
+          className="mt-6 w-full resize-none rounded-3xl border-2 border-trait bg-carte p-5 leading-relaxed placeholder:text-encre-douce focus:border-marque focus:outline-none"
         />
-        {erreurSaisie && (
-          <p id="erreur-saisie" className="text-xs font-medium text-red-400">
-            {erreurSaisie}
+
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <button type="button" onClick={coller} className="bouton bouton-secondaire">
+            <Icone nom="coller" />
+            Coller
+          </button>
+          <label className="bouton bouton-secondaire has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-marque">
+            <input
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={lireCapture}
+              disabled={occupation !== null}
+            />
+            <Icone nom="image" />
+            <span aria-live="polite">{occupation === "lecture" ? "Lecture..." : "Capture"}</span>
+          </label>
+        </div>
+
+        {erreur && (
+          <p id="erreur-saisie" role="alert" className="mt-4 rounded-2xl border-l-4 border-danger bg-carte p-4 font-bold">
+            {erreur}
           </p>
         )}
-      </div>
 
-      <label className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-4 text-center transition focus-within:border-amber-500 hover:border-slate-600">
-        <input
-          type="file"
-          accept="image/*"
-          className="sr-only"
-          onChange={lireCapture}
-          disabled={lectureCapture || chargement}
-        />
-        <span className="text-xl" aria-hidden="true">
-          📷
-        </span>
-        <span className="text-xs font-medium text-slate-300" aria-live="polite">
-          {lectureCapture ? "Lecture de la capture..." : "Ajouter une capture d'écran"}
-        </span>
-        <span className="text-[11px] text-slate-500">
-          L&apos;image est lue sur ton téléphone, elle n&apos;est jamais envoyée.
-        </span>
-      </label>
+        <p className="mt-6 flex gap-2 text-sm text-encre-douce">
+          <Icone nom="cadenas" className="mt-0.5 size-4 shrink-0" />
+          Les numéros et montants sont masqués avant l&apos;envoi. La capture reste sur votre téléphone.
+        </p>
+      </main>
 
-      <button
-        type="submit"
-        disabled={chargement || lectureCapture}
-        className="w-full rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-slate-950 shadow-lg transition hover:bg-amber-400 active:scale-[0.99] disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
-      >
-        {chargement ? "Analyse en cours..." : "Analyser"}
-      </button>
+      <footer className="sticky bottom-0 -mx-5 bg-fond/90 px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] backdrop-blur">
+        <button type="submit" disabled={occupation !== null} className="bouton bouton-principal">
+          {occupation === "verification" && (
+            <span className="size-5 animate-spin rounded-full border-3 border-current border-t-transparent motion-reduce:animate-none" />
+          )}
+          {occupation === "verification" ? "Vérification..." : "Vérifier le message"}
+        </button>
+        <p className="mt-3 text-center text-xs text-encre-douce">
+          Sàmm aide à repérer les arnaques, il ne garantit rien.{" "}
+          <a href={DEPOT} className="font-bold underline underline-offset-2">
+            Projet libre
+          </a>
+        </p>
+      </footer>
     </form>
   );
 }

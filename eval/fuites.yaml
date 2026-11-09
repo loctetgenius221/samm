@@ -1,0 +1,63 @@
+- texte: "Vous avez reçu 25 000 FCFA de Moussa Diop. Je me suis trompé, renvoyez-moi le code."
+  noms: [Moussa Diop]
+  montants: [25 000 FCFA]
+- texte: "Bonjour, je suis Awa Ndiaye, conseillère Wave. Appelez-moi au 77 123 45 67."
+  noms: [Awa Ndiaye]
+  numeros: [77 123 45 67]
+- texte: "De la part de Cheikh Fall : envoie 10000F au 78 456 12 34 pour débloquer ton colis."
+  noms: [Cheikh Fall]
+  montants: [10000F]
+  numeros: [78 456 12 34]
+- texte: "Orange Money : transfert de 50.000 FCFA reçu de Fatou Sarr. Solde 52.300 FCFA."
+  noms: [Fatou Sarr]
+  montants: [50.000 FCFA, 52.300 FCFA]
+- texte: "Salut c'est Ibrahima, j'ai changé de numéro, voici le nouveau : +221 76 555 44 33"
+  noms: [Ibrahima]
+  numeros: [+221 76 555 44 33]
+- texte: "M. Mamadou Ba, votre compte sera suspendu. Contactez le 70 222 33 44 immédiatement."
+  noms: [Mamadou Ba]
+  numeros: [70 222 33 44]
+- texte: "Félicitations Aminata Sow ! Vous avez gagné 500 000 FCFA à la tombola Wave."
+  noms: [Aminata Sow]
+  montants: [500 000 FCFA]
+- texte: "Envoyé par Ousmane Diallo : 15000 FCFA. Merci de me renvoyer, erreur de numéro."
+  noms: [Ousmane Diallo]
+  montants: [15000 FCFA]
+- texte: "Lieutenant Babacar Gueye, police nationale. Payez l'amende de 75 000 FCFA sous 24h."
+  noms: [Babacar Gueye]
+  montants: [75 000 FCFA]
+- texte: "Ma soeur Khady m'a donné ton numéro 77 987 65 43, tu peux m'aider ?"
+  noms: [Khady]
+  numeros: [77 987 65 43]
+- texte: "Wave : Mariama Faye vous a envoyé 2 500 F. Code de retrait 4821."
+  noms: [Mariama Faye]
+  montants: [2 500 F]
+- texte: "Je suis Modou du service client Free Money, donnez-moi le code reçu."
+  noms: [Modou]
+- texte: "Bonjour Ndeye Coumba Thiam, votre colis est bloqué à la douane. Frais : 12 500 FCFA."
+  noms: [Ndeye Coumba Thiam]
+  montants: [12 500 FCFA]
+- texte: "Transfert de Pape Seck vers 76 111 22 33 : 30 000 FCFA. Confirmez avec votre PIN."
+  noms: [Pape Seck]
+  numeros: [76 111 22 33]
+  montants: [30 000 FCFA]
+- texte: "Assalamou aleykoum, c'est Serigne Mbaye. Mon fils est malade, envoie 20 000 FCFA stp."
+  noms: [Serigne Mbaye]
+  montants: [20 000 FCFA]
+- texte: "Votre facture Senelec au nom de Rokhaya Diouf : 18 450 FCFA, à payer avant le 30."
+  noms: [Rokhaya Diouf]
+  montants: [18 450 FCFA]
+- texte: "Alioune Badara Cissé vous invite à rejoindre le groupe gagnant. Appelez le 33 821 00 00."
+  noms: [Alioune Badara Cissé]
+  numeros: [33 821 00 00]
+- texte: "Reçu de Seynabou Kane 7 000 FCFA. Votre nouveau solde est 9 250 FCFA."
+  noms: [Seynabou Kane]
+  montants: [7 000 FCFA, 9 250 FCFA]
+- texte: "Yaay Astou dafa wax ma nga yonnee ma 5000 FCFA ci 77 333 22 11"
+  noms: [Astou]
+  montants: [5000 FCFA]
+  numeros: [77 333 22 11]
+- texte: "Docteur Lamine Ndour : votre résultat est prêt, payez 25 000 FCFA au 78 000 11 22."
+  noms: [Lamine Ndour]
+  montants: [25 000 FCFA]
+  numeros: [78 000 11 22]

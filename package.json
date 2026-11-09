@@ -12,6 +12,7 @@
     "validate:data": "tsx scripts/validate-data.ts",
     "eval": "tsx eval/run.ts",
     "eval:fusion": "tsx eval/fusion.ts",
+    "eval:fuites": "tsx eval/fuites.ts",
     "test:llm": "tsx scripts/test-llm.ts"
   },
   "dependencies": {

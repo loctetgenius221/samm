@@ -22,7 +22,7 @@ jobs:
       - name: Configurer Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: "npm"
 
       - name: Installation propre des dépendances
@@ -41,6 +41,8 @@ jobs:
       - name: Validation des données (scams et conduite)
         run: npm run validate:data
 
-      # TODO: Étape future pour mesurer les performances du Système A (règles seules, sans appel LLM)
-      # - name: Mesure du Système A (règles heuristiques seules)
-      #   run: npm run eval -- --system=rules
+      - name: Tests unitaires
+        run: npm test
+
+      - name: Mesure du système A (règles seules, sans modèle)
+        run: npm run eval -- --system=A

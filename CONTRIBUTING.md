@@ -34,10 +34,11 @@ Chaque entrée doit impérativement respecter le schéma suivant :
 ### 3. Règles strictes de masquage
 - **Anonymisation absolue** : Aucun numéro de téléphone réel, aucun nom d'expéditeur, aucun montant spécifique ni URL directe ne doit figurer dans `exemple_masque`.
 - Utilisez les marqueurs de remplacement explicites :
-  - `[NUMÉRO_MASQUÉ]` pour tout numéro
-  - `[MONTANT_MASQUÉ]` pour tout montant
-  - `[NOM_MASQUÉ]` pour toute identité
-  - `[LIEN_MASQUÉ]` pour tout lien hypertexte
+  - `[NUMERO_MASQUE]` pour tout numéro
+  - `[MONTANT_MASQUE]` pour tout montant
+  - `[NOM_MASQUE]` pour toute identité
+  - `[LIEN_MASQUE]` pour tout lien hypertexte
+  - `[CODE_MASQUE]` pour tout code secret ou OTP
 
 ### 4. Source et date obligatoires
 - Le champ `source` ne doit jamais être vide (indiquer le canal ou contributeur fiable).

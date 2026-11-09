@@ -1,15 +1,7 @@
-# Résultats d'évaluation Sàmm
+# Résultats d'évaluation
 
-Ce document consigne les métriques obtenues lors des sessions d'évaluation du pipeline d'analyse Sàmm.
+Fichier généré par `npm run eval`, ne pas modifier à la main. Les comptes se lisent « réussis sur total ».
 
-## Tableau des résultats
-
-| Date | Version prompt | Dataset | Nb exemples | Précision globale | Rappel danger | Taux faux positifs | Remarques / Régressions |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| | | | | | | | |
-
-## Détails par catégorie d'arnaque
-
-| Catégorie / Opérateur | Total testé | Succès | Échecs | Verdicts discordants |
-| :--- | :--- | :--- | :--- | :--- |
-| | | | | |
+| Système | Jeu | Version | Date | Messages | Précision | Rappel sur les arnaques | Rappel sur les variantes inédites | Fausses alertes sur les légitimes difficiles | Injections détectées |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| A : règles et mots-clés | complet | regles | 2026-11-09 | 0 | n/a | n/a | n/a | n/a | n/a |

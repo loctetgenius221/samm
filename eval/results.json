@@ -1,0 +1,32 @@
+{
+  "A:complet": {
+    "systeme": "A",
+    "description": "règles et mots-clés",
+    "version": "regles",
+    "split": "complet",
+    "date": "2026-11-09",
+    "messages": 0,
+    "metriques": {
+      "precision": {
+        "ok": 0,
+        "total": 0
+      },
+      "rappelArnaques": {
+        "ok": 0,
+        "total": 0
+      },
+      "rappelVariantesInedites": {
+        "ok": 0,
+        "total": 0
+      },
+      "faussesAlertesLegitimesDifficiles": {
+        "ok": 0,
+        "total": 0
+      },
+      "injectionsDetectees": {
+        "ok": 0,
+        "total": 0
+      }
+    }
+  }
+}

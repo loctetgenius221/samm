@@ -1,28 +1,29 @@
-/**
- * Module OCR pour l'extraction de texte à partir d'images ou captures d'écran.
- */
+import type { Worker } from "tesseract.js";
 
-/**
- * Type d'entrée supporté pour l'image (Blob, Buffer ou chemin de fichier).
- */
-export type ImageInput = Blob | Buffer | string;
+const LARGEUR_MINIMALE = 1500;
 
-/**
- * Interface pour les moteurs d'extraction OCR.
- */
-export interface OcrEngine {
-  readText(image: ImageInput): Promise<string>;
+let worker: Promise<Worker> | undefined;
+
+const obtenirWorker = (): Promise<Worker> =>
+  (worker ??= import("tesseract.js").then(({ createWorker }) => createWorker("fra")));
+
+async function pretraiter(image: Blob): Promise<HTMLCanvasElement> {
+  const bitmap = await createImageBitmap(image);
+  const echelle = Math.max(1, LARGEUR_MINIMALE / bitmap.width);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * echelle);
+  canvas.height = Math.round(bitmap.height * echelle);
+
+  const contexte = canvas.getContext("2d");
+  if (!contexte) throw new Error("Canvas 2D indisponible");
+  // Ignoré par les navigateurs sans ctx.filter : Tesseract binarise de toute façon.
+  contexte.filter = "grayscale(1)";
+  contexte.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  return canvas;
 }
 
-/**
- * Fonction principale d'extraction de texte depuis une image.
- * 
- * @param image Données de l'image ou capture d'écran
- * @returns Promesse contenant le texte brut extrait
- */
-export async function readText(image: ImageInput): Promise<string> {
-  void image;
-  // TODO: Sélectionner et orchestrer le moteur OCR actif (ex: Tesseract ou Paddle)
-  // TODO: Renvoyer le texte extrait sans modifier la sémantique
-  return "";
+export async function readText(image: Blob): Promise<string> {
+  const { data } = await (await obtenirWorker()).recognize(await pretraiter(image));
+  return data.text.trim();
 }

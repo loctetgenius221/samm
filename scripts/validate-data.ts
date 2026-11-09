@@ -1,36 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
 import yaml from "yaml";
+import { maskText } from "../lib/mask";
+import type { ConduiteEntree, ScamEntree } from "../lib/types";
 
-interface Contact {
-  type?: string;
-  valeur?: string;
-  source?: string;
-  date_source?: string;
-  a_verifier?: boolean;
-}
+type Arnaque = Partial<ScamEntree>;
+type Conduite = Partial<ConduiteEntree>;
 
-interface ConduiteEntry {
-  id?: string;
-  texte?: string;
-  contacts?: Contact[];
-}
-
-interface ScamEntry {
-  id?: string;
-  operateur?: string;
-  langue?: string;
-  canal?: string;
-  niveau?: string;
-  resume?: string;
-  exemple_masque?: string;
-  signaux?: string[];
-  conduite_id?: string;
-  source?: string;
-  date_source?: string;
-}
-
-const REQUIRED_SCAM_FIELDS: (keyof ScamEntry)[] = [
+const CHAMPS_OBLIGATOIRES: (keyof ScamEntree)[] = [
   "id",
   "operateur",
   "langue",
@@ -44,143 +21,93 @@ const REQUIRED_SCAM_FIELDS: (keyof ScamEntry)[] = [
   "date_source",
 ];
 
-const VALID_NIVEAUX = ["danger", "suspect", "aucun_signal"];
+const NIVEAUX = ["danger", "suspect", "aucun_signal"];
 
-export function validateData(): { isValid: boolean; errors: string[] } {
-  const errors: string[] = [];
-  const rootDir = process.cwd();
+const estVide = (valeur: unknown): boolean =>
+  valeur === undefined ||
+  valeur === null ||
+  (typeof valeur === "string" && valeur.trim() === "") ||
+  (Array.isArray(valeur) && valeur.length === 0);
 
-  // 1. Validation de conduite.yaml
-  const conduitePath = path.join(rootDir, "conduite.yaml");
-  const conduiteIds = new Set<string>();
+export const estDateIso = (date: string): boolean =>
+  /^\d{4}-\d{2}-\d{2}$/.test(date) && !Number.isNaN(Date.parse(date));
 
-  if (!fs.existsSync(conduitePath)) {
-    errors.push("Le fichier conduite.yaml est introuvable à la racine du projet.");
-    return { isValid: false, errors };
+export function erreursConduite(conduite: Conduite): string[] {
+  const nom = conduite.id || "sans id";
+  const erreurs: string[] = [];
+
+  if (estVide(conduite.id)) erreurs.push("conduite sans 'id'");
+  if (estVide(conduite.texte)) erreurs.push(`conduite '${nom}' : 'texte' manquant`);
+  if (!Array.isArray(conduite.contacts)) {
+    erreurs.push(`conduite '${nom}' : 'contacts' doit être une liste`);
+    return erreurs;
   }
 
-  let conduiteData: ConduiteEntry[] = [];
-  try {
-    const fileContent = fs.readFileSync(conduitePath, "utf-8");
-    const parsed = yaml.parse(fileContent);
-    if (!Array.isArray(parsed)) {
-      errors.push("Le fichier conduite.yaml doit contenir une liste d'entrées.");
-    } else {
-      conduiteData = parsed as ConduiteEntry[];
-    }
-  } catch (err) {
-    errors.push(`Erreur de syntaxe YAML dans conduite.yaml : ${err instanceof Error ? err.message : String(err)}`);
-  }
-
-  for (const [index, entry] of conduiteData.entries()) {
-    const entryId = entry.id || `entrée_index_${index}`;
-
-    if (!entry.id || typeof entry.id !== "string" || entry.id.trim() === "") {
-      errors.push(`L'entrée #${index + 1} de conduite.yaml manque d'un champ 'id' valide.`);
-    } else {
-      conduiteIds.add(entry.id);
-    }
-
-    if (!entry.texte || typeof entry.texte !== "string" || entry.texte.trim() === "") {
-      errors.push(`L'entrée '${entryId}' de conduite.yaml manque d'un champ 'texte' valide.`);
-    }
-
-    if (!Array.isArray(entry.contacts)) {
-      errors.push(`L'entrée '${entryId}' de conduite.yaml doit définir une liste 'contacts'.`);
-    } else {
-      for (const [contactIndex, contact] of entry.contacts.entries()) {
-        if (!contact.source || typeof contact.source !== "string" || contact.source.trim() === "") {
-          errors.push(
-            `L'entrée de conduite '${entryId}' a un contact (index ${contactIndex}, type '${contact.type || "inconnu"}') sans source.`
-          );
-        }
-      }
+  for (const contact of conduite.contacts) {
+    const libelle = `conduite '${nom}', contact '${contact.type ?? "inconnu"}'`;
+    if (estVide(contact.source)) erreurs.push(`${libelle} : 'source' manquante`);
+    if (!estVide(contact.valeur) && !estDateIso(contact.date_source ?? "")) {
+      erreurs.push(`${libelle} : un contact renseigné exige une 'date_source' AAAA-MM-JJ`);
     }
   }
-
-  // 2. Validation des entrées de scams/
-  const scamsDir = path.join(rootDir, "scams");
-  if (!fs.existsSync(scamsDir)) {
-    errors.push("Le dossier scams/ est introuvable.");
-    return { isValid: false, errors };
-  }
-
-  const files = fs.readdirSync(scamsDir);
-  const jsonFiles = files.filter((f) => f.endsWith(".json") && f !== "schema.json");
-
-  for (const filename of jsonFiles) {
-    const filePath = path.join(scamsDir, filename);
-    let scam: Partial<ScamEntry>;
-
-    try {
-      const content = fs.readFileSync(filePath, "utf-8");
-      scam = JSON.parse(content) as Partial<ScamEntry>;
-    } catch (err) {
-      errors.push(`Le fichier scams/${filename} n'est pas un JSON valide : ${err instanceof Error ? err.message : String(err)}`);
-      continue;
-    }
-
-    const scamId = scam.id || filename;
-
-    // Vérification des champs obligatoires
-    for (const field of REQUIRED_SCAM_FIELDS) {
-      const val = scam[field];
-      if (val === undefined || val === null || (typeof val === "string" && val.trim() === "")) {
-        errors.push(`Le fichier scams/${filename} (id: '${scamId}') manque du champ obligatoire '${field}'.`);
-      }
-    }
-
-    // Vérification spécifique de source et date_source
-    if (!scam.source || typeof scam.source !== "string" || scam.source.trim() === "") {
-      errors.push(`L'entrée '${scamId}' dans scams/${filename} n'a pas de 'source'.`);
-    }
-
-    if (!scam.date_source || typeof scam.date_source !== "string" || scam.date_source.trim() === "") {
-      errors.push(`L'entrée '${scamId}' dans scams/${filename} n'a pas de 'date_source'.`);
-    }
-
-    // Vérification du niveau (interdiction formelle du terme « sûr »)
-    if (scam.niveau) {
-      if (!VALID_NIVEAUX.includes(scam.niveau)) {
-        errors.push(
-          `Le niveau '${scam.niveau}' de l'entrée '${scamId}' est invalide. Valeurs autorisées : ${VALID_NIVEAUX.join(", ")}.`
-        );
-      }
-    }
-
-    // Vérification du format des signaux
-    if (scam.signaux && (!Array.isArray(scam.signaux) || scam.signaux.length === 0)) {
-      errors.push(`L'entrée '${scamId}' doit comporter au moins un signal dans 'signaux'.`);
-    }
-
-    // Vérification de l'existence du conduite_id dans conduite.yaml
-    if (scam.conduite_id) {
-      if (!conduiteIds.has(scam.conduite_id)) {
-        errors.push(
-          `Le conduite_id '${scam.conduite_id}' de l'arnaque '${scamId}' n'existe pas dans conduite.yaml.`
-        );
-      }
-    }
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
+  return erreurs;
 }
 
-// Exécution du script en ligne de commande
-if (require.main === module || process.argv[1]?.endsWith("validate-data.ts")) {
-  const result = validateData();
+export function erreursArnaque(arnaque: Arnaque, conduiteIds: Set<string>): string[] {
+  const erreurs = CHAMPS_OBLIGATOIRES.filter((champ) => estVide(arnaque[champ])).map(
+    (champ) => `champ '${champ}' manquant`
+  );
 
-  if (!result.isValid) {
-    console.error("\n❌ Échec de la validation des données :");
-    for (const err of result.errors) {
-      console.error(`  - ${err}`);
+  if (arnaque.niveau && !NIVEAUX.includes(arnaque.niveau)) {
+    erreurs.push(`niveau '${arnaque.niveau}' invalide (attendu : ${NIVEAUX.join(", ")})`);
+  }
+  if (arnaque.date_source && !estDateIso(arnaque.date_source)) {
+    erreurs.push(`date_source '${arnaque.date_source}' invalide (attendu : AAAA-MM-JJ)`);
+  }
+  if (arnaque.conduite_id && !conduiteIds.has(arnaque.conduite_id)) {
+    erreurs.push(`conduite_id '${arnaque.conduite_id}' absent de conduite.yaml`);
+  }
+  if (arnaque.exemple_masque && maskText(arnaque.exemple_masque) !== arnaque.exemple_masque) {
+    erreurs.push("exemple_masque contient des données non masquées (numéro, montant, lien ou nom)");
+  }
+  return erreurs;
+}
+
+function lireArnaques(dossier: string): Map<string, Arnaque> {
+  const fichiers = fs.readdirSync(dossier).filter((f) => f.endsWith(".json") && f !== "schema.json");
+  return new Map(
+    fichiers.map((f) => [f, JSON.parse(fs.readFileSync(path.join(dossier, f), "utf-8")) as Arnaque])
+  );
+}
+
+export function validerDonnees(racine = process.cwd()): string[] {
+  const conduites = yaml.parse(fs.readFileSync(path.join(racine, "conduite.yaml"), "utf-8"));
+  if (!Array.isArray(conduites)) return ["conduite.yaml doit contenir une liste"];
+
+  const erreurs = (conduites as Conduite[]).flatMap(erreursConduite).map((e) => `conduite.yaml : ${e}`);
+  const conduiteIds = new Set((conduites as Conduite[]).map((c) => c.id).filter((id) => id !== undefined));
+  const idsVus = new Set<string>();
+
+  for (const [fichier, arnaque] of lireArnaques(path.join(racine, "scams"))) {
+    const erreursFichier = erreursArnaque(arnaque, conduiteIds);
+    if (arnaque.id && idsVus.has(arnaque.id)) erreursFichier.push(`id '${arnaque.id}' en double`);
+    if (arnaque.id) idsVus.add(arnaque.id);
+    erreurs.push(...erreursFichier.map((e) => `scams/${fichier} : ${e}`));
+  }
+  return erreurs;
+}
+
+if (require.main === module) {
+  try {
+    const erreurs = validerDonnees();
+    if (erreurs.length > 0) {
+      console.error(`❌ ${erreurs.length} erreur(s) dans les données :`);
+      erreurs.forEach((e) => console.error(`  - ${e}`));
+      process.exit(1);
     }
+    console.log("✅ scams/ et conduite.yaml sont conformes.");
+  } catch (erreur) {
+    console.error(`❌ Lecture des données impossible : ${erreur instanceof Error ? erreur.message : erreur}`);
     process.exit(1);
-  } else {
-    console.log("\n✅ Validation des données réussie : toutes les entrées de scams/ et conduite.yaml sont conformes.");
-    process.exit(0);
   }
 }

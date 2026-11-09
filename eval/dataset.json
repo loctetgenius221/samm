@@ -1,4 +1,4 @@
 {
-  "$description": "Jeu étiqueté de Sàmm. Chaque item : id, texte (masqué), attendu (danger | suspect | aucun_signal), categorie (arnaque | variante_inedite | injection | legitime | legitime_difficile), split (reglage | mesure). Les variantes inédites ne doivent pas figurer dans scams/.",
+  "$description": "Généré par npm run eval:fusion depuis eval/messages.yaml et eval/etiquettes/. Ne pas modifier à la main.",
   "items": []
 }

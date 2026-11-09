@@ -1,0 +1,8 @@
+{
+  "json.schemas": [
+    {
+      "fileMatch": ["scams/*.json", "!scams/schema.json"],
+      "url": "./scams/schema.json"
+    }
+  ]
+}

@@ -11,6 +11,7 @@
     "test": "tsx --test \"**/*.test.ts\"",
     "validate:data": "tsx scripts/validate-data.ts",
     "eval": "tsx eval/run.ts",
+    "eval:fusion": "tsx eval/fusion.ts",
     "test:llm": "tsx scripts/test-llm.ts"
   },
   "dependencies": {

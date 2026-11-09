@@ -12,8 +12,8 @@ body:
     id: exemple_masque
     attributes:
       label: "Texte du message suspect (strictement masqué)"
-      description: "Collez le message en remplaçant les informations par [NUMÉRO_MASQUÉ], [MONTANT_MASQUÉ], [NOM_MASQUÉ] ou [LIEN_MASQUÉ]."
-      placeholder: "Exemple : ALERTE : Votre compte [OPERATEUR_MASQUE] sera suspendu. Cliquez sur [LIEN_MASQUÉ] pour confirmer votre code..."
+      description: "Collez le message en remplaçant les informations par [NUMERO_MASQUE], [MONTANT_MASQUE], [NOM_MASQUE] ou [LIEN_MASQUE]."
+      placeholder: "Exemple : ALERTE : Votre compte Wave sera suspendu. Cliquez sur [LIEN_MASQUE] pour confirmer votre code..."
     validations:
       required: true
   - type: input

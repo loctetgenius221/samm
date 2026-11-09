@@ -11,7 +11,7 @@ export const CATEGORIES = [
 
 export const SPLITS = ["reglage", "mesure"] as const;
 
-const itemSchema = z.object({
+export const itemSchema = z.object({
   id: z.string().min(1),
   texte: z.string().min(1),
   attendu: z.enum(["danger", "suspect", "aucun_signal"]),

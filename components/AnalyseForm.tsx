@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { maskText } from "@/lib/mask";
-import type { AnalyseRequest, AnalyseResponse, AnalyseErrorResponse } from "@/lib/types";
+import { readText } from "@/lib/ocr";
+import type { AnalyseRequest, AnalyseResponse, AnalyseErrorResponse, SourceAnalyse } from "@/lib/types";
 import type { ResultatAffichage } from "./ResultZone";
 
 const CONDUITE_SECOURS_CLIENT =
@@ -17,6 +18,27 @@ export function AnalyseForm({ onResultat, onChargementChange }: AnalyseFormProps
   const [texte, setTexte] = useState("");
   const [erreurSaisie, setErreurSaisie] = useState<string | null>(null);
   const [chargement, setChargement] = useState(false);
+  const [source, setSource] = useState<SourceAnalyse>("texte");
+  const [lectureCapture, setLectureCapture] = useState(false);
+
+  async function lireCapture(e: React.ChangeEvent<HTMLInputElement>) {
+    const image = e.target.files?.[0];
+    e.target.value = "";
+    if (!image) return;
+
+    setErreurSaisie(null);
+    setLectureCapture(true);
+    try {
+      const texteLu = await readText(image);
+      if (!texteLu) throw new Error("aucun texte");
+      setTexte(texteLu);
+      setSource("capture");
+    } catch {
+      setErreurSaisie("Impossible de lire le texte de cette capture. Colle le message à la place.");
+    } finally {
+      setLectureCapture(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,7 +58,7 @@ export function AnalyseForm({ onResultat, onChargementChange }: AnalyseFormProps
 
       const payload: AnalyseRequest = {
         texte: texteMasque,
-        source: "texte",
+        source,
       };
 
       const res = await fetch("/api/analyse", {
@@ -107,6 +129,7 @@ export function AnalyseForm({ onResultat, onChargementChange }: AnalyseFormProps
           value={texte}
           onChange={(e) => {
             setTexte(e.target.value);
+            if (!e.target.value) setSource("texte");
             if (erreurSaisie) setErreurSaisie(null);
           }}
           placeholder="Exemple : Félicitations, vous avez reçu un gain de... Transférez le code..."
@@ -120,26 +143,28 @@ export function AnalyseForm({ onResultat, onChargementChange }: AnalyseFormProps
         )}
       </div>
 
-      {/* Zone d'ajout de capture d'écran (non branchée, avec TODO) */}
-      <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-4 text-center">
-        {/* TODO: Connecter l'upload d'image avec le module OCR (lib/ocr) */}
-        <div className="flex flex-col items-center justify-center gap-1.5">
-          <span className="text-xl" role="img" aria-hidden="true">
-            📷
-          </span>
-          <p className="text-xs font-medium text-slate-300">
-            Ajouter une capture d&apos;écran
-          </p>
-          <span className="inline-block rounded-full bg-slate-800 px-2.5 py-0.5 text-[10px] font-medium text-slate-400">
-            OCR bientôt disponible (TODO)
-          </span>
-        </div>
-      </div>
+      <label className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-4 text-center transition focus-within:border-amber-500 hover:border-slate-600">
+        <input
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={lireCapture}
+          disabled={lectureCapture || chargement}
+        />
+        <span className="text-xl" aria-hidden="true">
+          📷
+        </span>
+        <span className="text-xs font-medium text-slate-300" aria-live="polite">
+          {lectureCapture ? "Lecture de la capture..." : "Ajouter une capture d'écran"}
+        </span>
+        <span className="text-[11px] text-slate-500">
+          L&apos;image est lue sur ton téléphone, elle n&apos;est jamais envoyée.
+        </span>
+      </label>
 
-      {/* Bouton d'action Analyser */}
       <button
         type="submit"
-        disabled={chargement}
+        disabled={chargement || lectureCapture}
         className="w-full rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-slate-950 shadow-lg transition hover:bg-amber-400 active:scale-[0.99] disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
       >
         {chargement ? "Analyse en cours..." : "Analyser"}

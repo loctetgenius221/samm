@@ -1,5 +1,4 @@
 {
-  "$description": "Structure du jeu de données d'évaluation pour Sàmm. Chaque item contient le texte d'entrée masqué, la source et le résultat attendu (niveau, signaux attendus, conduite_id attendu).",
-  "version": "1.0.0",
+  "$description": "Jeu étiqueté de Sàmm. Chaque item : id, texte (masqué), attendu (danger | suspect | aucun_signal), categorie (arnaque | variante_inedite | injection | legitime | legitime_difficile), split (reglage | mesure). Les variantes inédites ne doivent pas figurer dans scams/.",
   "items": []
 }

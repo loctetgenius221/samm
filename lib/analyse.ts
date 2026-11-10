@@ -1,7 +1,7 @@
 import type { AnalyseResponse, ArnaqueProche, NiveauAlerte, ResultatRegles } from "@/lib/types";
 import { evaluateRules } from "@/lib/rules";
 import { retrieveSimilarScams } from "@/lib/retrieve";
-import { analyzeWithLLM, VERSION_PROMPT } from "@/lib/llm";
+import { analyzeWithLLM, estSortieDeRepli, VERSION_PROMPT } from "@/lib/llm";
 import { getAllConduiteIds, getResolvedConduite } from "@/lib/conduite";
 
 export interface OptionsAnalyse {
@@ -33,10 +33,15 @@ export async function analyser(
     systeme
   );
 
-  // Plancher : une règle dure interdit « aucun_signal », quelle que soit la réponse du modèle.
   let niveauFinal: NiveauAlerte = resultatLLM.niveau;
-  const signauxFinaux = [...resultatLLM.signaux];
+  let signauxFinaux = [...resultatLLM.signaux];
 
+  // Repli : l'usager voit les signaux des règles, pas « analyse non concluante ».
+  if (estSortieDeRepli(resultatLLM) && resultatRegles.signaux.length > 0) {
+    signauxFinaux = resultatRegles.signaux.slice(0, 3).map((r) => r.description);
+  }
+
+  // Plancher : une règle dure interdit « aucun_signal », quelle que soit la réponse du modèle.
   if (resultatRegles.plancher_suspect && niveauFinal === "aucun_signal") {
     niveauFinal = "suspect";
     for (const regle of resultatRegles.signaux) {

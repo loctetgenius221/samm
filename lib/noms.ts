@@ -1,3 +1,5 @@
+import { MOTS_DES_MARQUEURS } from "./marqueurs";
+
 /**
  * Masquage des noms de personnes : dictionnaire de noms courants + indices de contexte.
  * Masquage au mieux, non garanti : un nom rare, sans indice autour, peut passer.
@@ -66,7 +68,7 @@ const A_NE_PAS_MASQUER = ensemble([
   "Kaffrine", "Kédougou", "Matam", "Sédhiou", "Client", "Cliente", "Abonné", "Abonnée",
   "Utilisateur", "Service", "Compte", "Votre", "Notre", "Merci", "Cordialement",
   "Félicitations", "Urgent", "Attention", "Alerte", "Message", "Transfert", "Code",
-  "Numéro", "Montant", "Lien", "Nom", "Masqué", "Masque", "Numero",
+  "Numéro", "Montant", "Lien", "Nom", ...MOTS_DES_MARQUEURS,
 ]);
 
 const MOT = /([A-Za-zÀ-ÖØ-öø-ÿ]+)/;

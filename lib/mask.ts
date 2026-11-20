@@ -8,6 +8,8 @@
  * Options de configuration du masquage de texte.
  */
 import { masquerNoms } from "@/lib/noms";
+import { MARQUEURS } from "@/lib/marqueurs";
+export { MARQUEURS };
 
 export interface MaskOptions {
   placeholderNumero?: string;
@@ -18,11 +20,11 @@ export interface MaskOptions {
 }
 
 const DEFAULT_OPTIONS: Required<MaskOptions> = {
-  placeholderNumero: "[NUMERO_MASQUE]",
-  placeholderMontant: "[MONTANT_MASQUE]",
-  placeholderLien: "[LIEN_MASQUE]",
-  placeholderCode: "[CODE_MASQUE]",
-  placeholderNom: "[NOM_MASQUE]",
+  placeholderNumero: MARQUEURS.numero,
+  placeholderMontant: MARQUEURS.montant,
+  placeholderLien: MARQUEURS.lien,
+  placeholderCode: MARQUEURS.code,
+  placeholderNom: MARQUEURS.nom,
 };
 
 /**

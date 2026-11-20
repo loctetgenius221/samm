@@ -7,6 +7,8 @@
 /**
  * Options de configuration du masquage de texte.
  */
+import { masquerNoms } from "@/lib/noms";
+
 export interface MaskOptions {
   placeholderNumero?: string;
   placeholderMontant?: string;
@@ -66,11 +68,8 @@ export function maskText(texte: string, options?: MaskOptions): string {
     `$1${opt.placeholderCode}`
   );
 
-  // 5. Masquage des noms propres identifiés après des préfixes d'expédition / réception
-  masque = masque.replace(
-    /((?:de\s+la\s+part\s+de|envoy[eé]\s+par|re[cç]u\s+de)\s+)([A-ZÀ-ÿ][a-zà-ÿ]+(?:\s+[A-ZÀ-ÿ][a-zà-ÿ]+)+)/g,
-    `$1${opt.placeholderNom}`
-  );
+    // 5. Masquage des noms de personnes (dictionnaire + indices de contexte)
+  masque = masquerNoms(masque, opt.placeholderNom);
 
   return masque;
 }

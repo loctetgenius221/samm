@@ -47,4 +47,11 @@ npm run eval -- --system=A --split=reglage
 npm run eval -- --system=A --split=mesure
 ```
 
+B et C appellent le modèle : ils lisent la clé dans `.env` et refusent de tourner sans elle, pour ne pas mesurer le repli « suspect ». Les réponses sont gardées dans `eval/cache/`, donc relancer une mesure ne repaie pas les appels déjà faits. Pour comparer deux modèles, changez `LLM_MODEL` dans `.env` : chaque modèle a sa ligne dans le tableau.
+
+```bash
+npm run eval -- --system=B --split=reglage
+npm run eval -- --system=C --split=reglage
+```
+
 Les résultats s'écrivent dans `results.md`, en comptes (« 11 sur 14 ») plutôt qu'en pourcentages. Le prompt est figé avant la mesure finale sur `mesure`.

@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Atkinson_Hyperlegible_Next } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const atkinson = Atkinson_Hyperlegible_Next({
+const atkinson = localFont({
+  src: "./fonts/AtkinsonHyperlegibleNext-Variable.woff2",
+  weight: "200 800",
   variable: "--font-atkinson",
-  subsets: ["latin"],
-  adjustFontFallback: false,
   fallback: ["system-ui", "Arial", "sans-serif"],
 });
 

@@ -61,3 +61,30 @@
   noms: [Lamine Ndour]
   montants: [25 000 FCFA]
   numeros: [78 000 11 22]
+- texte: "Salut, c'est Tamsir Gadiaga, j'ai besoin de 3000F sur ce numéro 76 222 11 00."
+  noms_inconnus: [Tamsir Gadiaga]
+  montants: [3000F]
+  numeros: [76 222 11 00]
+- texte: "De la part de Fodé Dansokho : votre colis est bloqué, payez 4 500 FCFA."
+  noms_inconnus: [Fodé Dansokho]
+  montants: [4 500 FCFA]
+- texte: "Ngoné Mbengue vous a envoyé 10 000 FCFA. Renvoyez le code reçu."
+  noms_inconnus: [Ngoné Mbengue]
+  montants: [10 000 FCFA]
+- texte: "Bonsoir Coura, ton cousin Bassirou Senghor m'a donné ton numéro."
+  noms_inconnus: [Coura, Bassirou Senghor]
+- texte: "Je m'appelle Youssou Ndoye, agent Wave, rappelez-moi au 78 555 66 77."
+  noms_inconnus: [Youssou Ndoye]
+  numeros: [78 555 66 77]
+- texte: "Transfert reçu de Dior Baldé : 25 000 FCFA. Solde : 31 200 FCFA."
+  noms_inconnus: [Dior Baldé]
+  montants: [25 000 FCFA, 31 200 FCFA]
+- texte: "Yandé Diédhiou a gagné la tombola ! Toi aussi, réclame ton lot ici."
+  noms_inconnus: [Yandé Diédhiou]
+- texte: "Bonjour M. Kouyaté, votre compte Orange Money sera suspendu."
+  noms_inconnus: [Kouyaté]
+- texte: "Tonton Mbène t'a laissé un message vocal, rappelle vite au 77 400 40 40."
+  noms_inconnus: [Mbène]
+  numeros: [77 400 40 40]
+- texte: "Merci de confirmer le paiement à Ibou Tendeng avant 18h."
+  noms_inconnus: [Ibou Tendeng]

@@ -236,6 +236,11 @@ const FALLBACK_OUTPUT: LLMOutput = {
   conduite_id: "conduite_suspicion_generale",
 };
 
+// Vrai si le modèle a échoué et que la sortie est le repli générique.
+export function estSortieDeRepli(sortie: LLMOutput): boolean {
+  return sortie === FALLBACK_OUTPUT;
+}
+
 // ---------------------------------------------------------------------------
 // Point d'entrée public
 // ---------------------------------------------------------------------------

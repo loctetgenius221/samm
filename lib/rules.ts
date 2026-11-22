@@ -100,6 +100,24 @@ export function normalizeText(text: string): string {
 // Liste déclarative des règles de garde-fou (système A)
 // ---------------------------------------------------------------------------
 
+// Fin d'une consigne de prudence : virgule, point, « mais », « sauf » ou un nouveau verbe de demande
+const FIN_CONSIGNE =
+  String.raw`(?=\s+(?:mais|sauf|except[eé]|hormis|envoyez|renvoyez|donnez|communiquez|transmettez|confirmez|saisissez|tapez)\b|[.!?;,]|$)`;
+
+// « ne le partagez avec personne », « ne communiquez jamais ce code », « ne donnez votre code à personne »
+const CONSIGNE_DE_PRUDENCE = new RegExp(
+  String.raw`\bne\s+(?:(?:(?:le|la|les|ce|cet|cette|ces|vos|votre|jamais|surtout|pas|plus)\s+)|l['’]){0,3}` +
+    String.raw`(?:partagez|partager|donnez|donner|communiquez|communiquer|transmettez|transmettre|divulguez|divulguer|dites|dire|confiez|confier|envoyez|envoyer|renvoyez|renvoyer)\b` +
+    String.raw`[^.!?;,]*?` + FIN_CONSIGNE,
+  "gi"
+);
+
+// « wave ne vous demandera jamais votre code », « ... jamais de renvoyer votre code »
+const PROMESSE_OPERATEUR = new RegExp(
+  String.raw`\bne\s+vous\s+demand(?:era|eront|e|ons)\s+(?:jamais|pas)\b[^.!?;,]*?` + FIN_CONSIGNE,
+  "gi"
+);
+
 export const REGLES_DETERMINISTES: RegleDefinition[] = [
   // 1. Demande de communiquer ou renvoyer un code reçu par SMS ou code secret
   {
@@ -109,28 +127,9 @@ export const REGLES_DETERMINISTES: RegleDefinition[] = [
     description:
       "Détecte les sollicitations demandant de renvoyer, communiquer ou confirmer un code secret, code OTP ou mot de passe.",
     tester: (texte: string): boolean => {
-      // Exclure les messages d'avertissement officiels disant explicitement de ne JAMAIS partager son code
-      const avertissementOfficiel =
-        /ne\s+(?:le\s+)?(?:partagez|donnez|communiquez|transmettez)\s+(?:jamais|pas)/i.test(
-          texte
-        );
-      const conseilSecuriteWave =
-        /(?:wave|orange)\s+ne\s+vous\s+demandera\s+jamais\s+votre\s+code/i.test(
-          texte
-        );
+      // On retire les consignes de prudence avant de chercher une vraie demande de code
+      const reste = texte.replace(CONSIGNE_DE_PRUDENCE, " ").replace(PROMESSE_OPERATEUR, " ");
 
-      if (avertissementOfficiel || conseilSecuriteWave) {
-        // Si c'est un avertissement légitime sans contre-demande malveillante, on ne déclenche pas
-        const contientDemandeMalveillante =
-          /(?:veuillez|merci de|donne|envoie|renvoie|composez)\s+.*(?:code|otp|pin|secret)/i.test(
-            texte
-          );
-        if (!contientDemandeMalveillante) {
-          return false;
-        }
-      }
-
-      // Combinaison : Verbe d'action/transmission + Cible confidentielle
       const actionTransmission =
         /(?:renvoy(?:ez|er|e)|envoy(?:ez|er|e)|donn(?:ez|er|e)|partag(?:ez|er|e)|communiqu(?:ez|er|e)|transmett(?:ez|re)|transmet|fourni(?:ssez|r)|saisiss(?:ez|ir)|confirm(?:ez|er)|recopi(?:ez|er)|transf[eé]r(?:ez|er)|tap(?:ez|er)|r[eé]pondez avec|sms au)/i;
       const cibleCode =
@@ -144,10 +143,10 @@ export const REGLES_DETERMINISTES: RegleDefinition[] = [
         /confirm(?:ez|er)\s+(?:votre\s+)?code\s+(?:secret|otp|pin)/i;
 
       return (
-        motifComposezCode.test(texte) ||
-        motifRenvoyezCodeRecu.test(texte) ||
-        motifConfirmezCode.test(texte) ||
-        (actionTransmission.test(texte) && cibleCode.test(texte))
+        motifComposezCode.test(reste) ||
+        motifRenvoyezCodeRecu.test(reste) ||
+        motifConfirmezCode.test(reste) ||
+        (actionTransmission.test(reste) && cibleCode.test(reste))
       );
     },
   },

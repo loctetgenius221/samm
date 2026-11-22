@@ -1,10 +1,10 @@
 {
-  "A:complet": {
+  "A:complet:regles": {
     "systeme": "A",
     "description": "règles et mots-clés",
     "version": "regles",
     "split": "complet",
-    "date": "2026-11-09",
+    "date": "2026-11-22",
     "messages": 0,
     "metriques": {
       "precision": {

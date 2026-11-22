@@ -77,18 +77,19 @@ async function main(): Promise<void> {
   if (values.split && !estSplit(values.split)) throw new Error(`jeu '${values.split}' inconnu (${SPLITS.join(", ")})`);
 
   const split = values.split as Split | undefined;
+  const version = systeme.version();
   const items = chargerDataset(path.join(DOSSIER, "dataset.json"), split);
   const resultat: Resultat = {
     systeme: nom,
     description: systeme.description,
-    version: systeme.version,
+    version,
     split: split ?? "complet",
     date: new Date().toISOString().slice(0, 10),
     messages: items.length,
     metriques: calculerMetriques(await evaluer(items, systeme)),
   };
 
-  const resultats = { ...lireResultats(), [`${nom}:${resultat.split}`]: resultat };
+  const resultats = { ...lireResultats(), [`${nom}:${resultat.split}:${version}`]: resultat };
   const tries = Object.keys(resultats).sort().map((cle) => resultats[cle]);
   const markdown = rendreResultats(tries);
   fs.writeFileSync(CHEMIN_JSON, `${JSON.stringify(resultats, null, 2)}\n`);
@@ -96,7 +97,18 @@ async function main(): Promise<void> {
   console.log(markdown);
 }
 
+function chargerEnvironnement(): void {
+  try {
+    process.loadEnvFile();
+  } catch {
+    // Sans .env, seul le système A peut tourner.
+  }
+  // Le cache disque évite de repayer les appels au modèle quand on relance une mesure.
+  process.env.ENABLE_DISK_CACHE ??= "true";
+}
+
 if (require.main === module) {
+  chargerEnvironnement();
   main().catch((erreur: unknown) => {
     console.error(`❌ Évaluation impossible : ${erreur instanceof Error ? erreur.message : erreur}`);
     process.exit(1);

@@ -1,3 +1,5 @@
+import { MOTS_DES_MARQUEURS } from "./marqueurs";
+
 /**
  * Masquage des noms de personnes : dictionnaire de noms courants + indices de contexte.
  * Masquage au mieux, non garanti : un nom rare, sans indice autour, peut passer.
@@ -56,6 +58,10 @@ const INDICES_EXPRESSION: string[][] = [
   ["transfere", "a"],
   ["paye", "a"],
   ["beneficiaire"],
+  ["je", "suis"],
+  ["c", "est"],
+  ["je", "m", "appelle"],
+  ["mon", "nom", "est"],
 ];
 
 /** Mots capitalisés à ne jamais masquer : opérateurs, villes, mots du message, marqueurs. */
@@ -66,7 +72,11 @@ const A_NE_PAS_MASQUER = ensemble([
   "Kaffrine", "Kédougou", "Matam", "Sédhiou", "Client", "Cliente", "Abonné", "Abonnée",
   "Utilisateur", "Service", "Compte", "Votre", "Notre", "Merci", "Cordialement",
   "Félicitations", "Urgent", "Attention", "Alerte", "Message", "Transfert", "Code",
-  "Numéro", "Montant", "Lien", "Nom", "Masqué", "Masque", "Numero",
+  "Numéro", "Montant", "Lien", "Nom", "Agent", "Conseiller", "Technicien", "Responsable",
+  "Directeur", "Inspecteur", "Commandant", "Lieutenant", "Officier", "Huissier", "Police",
+  "Gendarmerie", "Banque", "Opérateur", "Désolé", "Désolée", "Bonne",
+  "Je", "Tu", "Il", "Elle", "Nous", "Vous", "On", "Le", "La", "Les", "Un", "Une", "Des", "Et",
+  "Ou", "Mais", "Pour", "Si", "Sur", "Dans", "Avec", ...MOTS_DES_MARQUEURS,
 ]);
 
 const MOT = /([A-Za-zÀ-ÖØ-öø-ÿ]+)/;
@@ -121,6 +131,13 @@ export function masquerNoms(texte: string, marqueur: string): string {
     masque[p] = true;
     // jusqu'à 2 mots capitalisés collés derrière (nom de famille, second prénom)
     for (let q = p + 1; q <= p + 2 && colles(q - 1, q) && candidat(q); q++) masque[q] = true;
+  }
+
+  // 3b. Nom de famille inconnu collé derrière un prénom du dictionnaire (« Binta Gadiaga »)
+  for (let p = 0; p < positions.length - 1; p++) {
+    const q = p + 1;
+    if (!masque[p] || masque[q] || !PRENOMS.has(norm[p]) || !colles(p, q)) continue;
+    if (majuscule[q] && !A_NE_PAS_MASQUER.has(norm[q]) && !INDICES_MOT.has(norm[q])) masque[q] = true;
   }
 
   // 4. Reconstruction en fusionnant les marqueurs voisins

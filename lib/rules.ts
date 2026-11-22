@@ -1,4 +1,9 @@
 import type { ResultatRegles, SignalRegle } from "./types";
+import { MARQUEURS } from "./marqueurs";
+
+const echapper = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const LIEN = echapper(MARQUEURS.lien);
+const MONTANT = echapper(MARQUEURS.montant);
 
 /**
  * Interface pour la déclaration d'une règle heuristique déterministe.
@@ -174,8 +179,10 @@ export const REGLES_DETERMINISTES: RegleDefinition[] = [
     tester: (texte: string): boolean => {
       const usurpationEntite =
         /(?:wave|orange|orange money|free|free money|sensuivi|wizall|wari|postecache|artp|police|gendarmerie|justice|tribunal|tr[eé]sor|imp[oô]ts|douane|dgid|gouvernement|minist[eè]re)/i;
-      const presenceLien =
-        /(?:https?:\/\/|www\.|\[lien_masque\]|\[url_masque\]|t\.co|bit\.ly|\.link\b|\.top\b|\.xyz\b|\.ml\b|\.ga\b|\.cf\b|\.tk\b|cliqu(?:ez|er)|connectez[- ]vous sur|rendez[- ]vous sur|suivez le lien)/i;
+      const presenceLien = new RegExp(
+        String.raw`(?:https?:\/\/|www\.|${LIEN}|t\.co|bit\.ly|\.link\b|\.top\b|\.xyz\b|\.ml\b|\.ga\b|\.cf\b|\.tk\b|cliqu(?:ez|er)|connectez[- ]vous sur|rendez[- ]vous sur|suivez le lien)`,
+        "i"
+      );
 
       return usurpationEntite.test(texte) && presenceLien.test(texte);
     },
@@ -199,8 +206,10 @@ export const REGLES_DETERMINISTES: RegleDefinition[] = [
 
       const verbeEnvoi =
         /(?:d[eé]pos(?:ez|er|e)|envoy(?:ez|er|e)|transf[eé]r(?:ez|er|e)|vers(?:ez|er|e)|pay(?:ez|er|e)|r[eé]charg(?:ez|er|e)|fais\s+un\s+d[eé]p[oô]t|faire\s+un\s+d[eé]p[oô]t)/i;
-      const objetFinancier =
-        /(?:argent|frais|caution|avance|commission|somme|fonds|solde|\[montant_masque\]|\d+\s*(?:fcfa|cfa|f\b)|sur le num[eé]ro|au num[eé]ro|vers le compte)/i;
+      const objetFinancier = new RegExp(
+        String.raw`(?:argent|frais|caution|avance|commission|somme|fonds|solde|${MONTANT}|\d+\s*(?:fcfa|cfa|f\b)|sur le num[eé]ro|au num[eé]ro|vers le compte)`,
+        "i"
+      );
       const justification =
         /(?:pour\s+(?:d[eé]bloquer|valider|recevoir|activer|r[eé]cup[eé]rer)|frais\s+de|caution\s+de|avance\s+de)/i;
 
@@ -211,10 +220,10 @@ export const REGLES_DETERMINISTES: RegleDefinition[] = [
         justification.test(texte);
 
       // Condition B : Demande explicite directe d'envoyer de l'argent/frais
-      const conditionDirecte =
-        /(?:d[eé]pos(?:ez|er)|envoy(?:ez|er)|transf[eé]r(?:ez|er))\s+(?:la\s+somme|l'argent|les\s+frais|\d+\s*(?:fcfa|cfa|f\b)|\[montant_masque\])/i.test(
-          texte
-        );
+      const conditionDirecte = new RegExp(
+        String.raw`(?:d[eé]pos(?:ez|er)|envoy(?:ez|er)|transf[eé]r(?:ez|er))\s+(?:la\s+somme|l'argent|les\s+frais|\d+\s*(?:fcfa|cfa|f\b)|${MONTANT})`,
+        "i"
+      ).test(texte);
 
       return conditionComplete || conditionDirecte;
     },

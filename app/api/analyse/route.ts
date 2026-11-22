@@ -3,12 +3,8 @@ import type {
   AnalyseRequest,
   AnalyseResponse,
   AnalyseErrorResponse,
-  NiveauAlerte,
 } from "@/lib/types";
-import { evaluateRules } from "@/lib/rules";
-import { retrieveSimilarScams } from "@/lib/retrieve";
-import { analyzeWithLLM, VERSION_PROMPT } from "@/lib/llm";
-import { getAllConduiteIds, getResolvedConduite } from "@/lib/conduite";
+import { analyser } from "@/lib/analyse";
 
 /**
  * Endpoint POST /api/analyse
@@ -75,58 +71,7 @@ export async function POST(
       );
     }
 
-    // 2. Évaluation des règles déterministes (garde-fou)
-    const resultatRegles = evaluateRules(texte);
-
-    // 3. Recherche des arnaques proches par n-grammes TF-IDF (top 3 significatifs)
-    const arnaquesProches = await retrieveSimilarScams(texte, 3);
-
-    // 4. Récupération des conduites autorisées de conduite.yaml
-    const listeConduites = getAllConduiteIds();
-
-    // 5. Appel au modèle de langage avec le contexte complet
-    const resultatLLM = await analyzeWithLLM(
-      texte,
-      resultatRegles.signaux,
-      arnaquesProches,
-      listeConduites
-    );
-
-    // 6. Application du plancher : si une règle dure s'est déclenchée,
-    // le niveau ne peut pas être inférieur à « suspect », quelle que soit la réponse du modèle
-    let niveauFinal: NiveauAlerte = resultatLLM.niveau;
-    const signauxFinaux = [...resultatLLM.signaux];
-
-    if (resultatRegles.plancher_suspect) {
-      if (niveauFinal === "aucun_signal") {
-        niveauFinal = "suspect";
-        // Si le LLM n'avait produit aucun signal d'alerte, on injecte les signaux des règles dures
-        for (const regle of resultatRegles.signaux) {
-          if (!signauxFinaux.includes(regle.description) && signauxFinaux.length < 3) {
-            signauxFinaux.push(regle.description);
-          }
-        }
-      }
-    }
-
-    // 7. Vérification de l'existence du conduite_id et résolution (fallback générique si inexistant)
-    const conduiteResolue = getResolvedConduite(resultatLLM.conduite_id);
-
-    // 8. Construction de la réponse conforme au contrat
-    const responseData: AnalyseResponse = {
-      niveau: niveauFinal,
-      signaux: signauxFinaux,
-      explication: resultatLLM.explication,
-      conduite_id: conduiteResolue.id,
-      conduite: {
-        texte: conduiteResolue.texte,
-        // Uniquement les contacts vérifiés (a_verifier === false)
-        contacts: conduiteResolue.contacts,
-      },
-      arnaques_proches: arnaquesProches,
-      version_prompt: VERSION_PROMPT,
-    };
-
+    const responseData = await analyser(texte);
     return NextResponse.json(responseData, { status: 200 });
   } catch {
     // IMPORTANT : Ne jamais journaliser le texte ni exposer de secrets ou détails internes

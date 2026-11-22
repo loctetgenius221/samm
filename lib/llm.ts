@@ -53,11 +53,23 @@ const JSON_SCHEMA_RESPONSE_FORMAT = {
 // ---------------------------------------------------------------------------
 const cacheMemoire = new Map<string, LLMOutput>();
 
-/**
- * Construit la clé de cache unique.
- */
-export function buildCacheKey(promptVersion: string, message: string): string {
-  return `${promptVersion}:::${message}`;
+// Clé de cache : version du prompt, système, modèle et texte masqué.
+export function buildCacheKey(
+  promptVersion: string,
+  message: string,
+  systeme: string,
+  modele: string
+): string {
+  return `${promptVersion}:::${systeme}:::${modele}:::${message}`;
+}
+
+// Modèle actif, sans lever d'erreur si le .env est absent.
+function modeleActif(): string {
+  try {
+    return getLLMConfig().model;
+  } catch {
+    return "inconnu";
+  }
 }
 
 /**
@@ -246,9 +258,10 @@ export async function analyzeWithLLM(
   texteMasque: string,
   signauxRegles: SignalRegle[] = [],
   arnaquesProches: ArnaqueProche[] = [],
-  conduiteIds?: string[]
+  conduiteIds?: string[],
+  systeme: string = "regles=1;recherche=1"
 ): Promise<LLMOutput> {
-  const cacheKey = buildCacheKey(VERSION_PROMPT, texteMasque);
+  const cacheKey = buildCacheKey(VERSION_PROMPT, texteMasque, systeme, modeleActif());
 
   // 1. Vérification du cache mémoire
   const cached = cacheMemoire.get(cacheKey);

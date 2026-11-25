@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { ContactConduite, NiveauAlerte } from "@/lib/types";
 import { Icone, type NomIcone } from "./Icone";
+import { partagerAlerte } from "@/lib/carte-image";
 
 export interface ResultatAffichage {
   niveau: NiveauAlerte;
@@ -38,14 +39,6 @@ const lienContact = (valeur: string): string => {
   return /[a-z]\.[a-z]/i.test(valeur) ? `https://${valeur}` : `tel:${valeur.replace(/\s/g, "")}`;
 };
 
-function partager(titre: string, signaux: string[]) {
-  const texte = `Sàmm a classé un message comme « ${titre} » : ${signaux.join(", ")}. Vérifiez vos messages suspects sur ${location.origin}`;
-  if (navigator.share) {
-    navigator.share({ text: texte }).catch(() => undefined);
-    return;
-  }
-  window.open(`https://wa.me/?text=${encodeURIComponent(texte)}`, "_blank", "noopener");
-}
 
 interface ResultZoneProps {
   resultat: ResultatAffichage;
@@ -111,7 +104,7 @@ export function ResultZone({ resultat, onRecommencer }: ResultZoneProps) {
       </main>
 
       <footer className="sticky bottom-0 space-y-3 bg-fond/90 px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] backdrop-blur">
-        <button type="button" onClick={() => partager(verdict.titre, resultat.signaux)} className="bouton bouton-secondaire">
+        <button type="button" onClick={() => void partagerAlerte(resultat)} className="bouton bouton-secondaire">
           <Icone nom="partager" />
           Partager l&apos;alerte
         </button>

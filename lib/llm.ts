@@ -8,10 +8,7 @@ import { getLLMConfig, getFallbackConfig, isDiskCacheEnabled } from "@/lib/confi
 import { buildSystemPrompt, buildUserMessage, VERSION_PROMPT } from "@/lib/prompt";
 import type { SignalRegle, ArnaqueProche } from "@/lib/types";
 
-/**
- * Schéma Zod pour valider strictement la sortie produite par le modèle de langage.
- * Règle stricte : le niveau doit être « danger », « suspect » ou « aucun_signal » (jamais le terme « sûr »).
- */
+/** Schéma Zod validant strictement la sortie du modèle (danger, suspect ou aucun_signal). */
 export const llmOutputSchema = z.object({
   niveau: z.enum(["danger", "suspect", "aucun_signal"]),
   signaux: z.array(z.string()).min(1).max(3),
@@ -21,9 +18,7 @@ export const llmOutputSchema = z.object({
 
 export type LLMOutput = z.infer<typeof llmOutputSchema>;
 
-/**
- * Schéma JSON compatible avec le format response_format de l'API OpenAI (json_schema strict).
- */
+// Format json_schema strict pour response_format de l'API OpenAI.
 const JSON_SCHEMA_RESPONSE_FORMAT = {
   type: "json_schema" as const,
   json_schema: {
@@ -48,9 +43,7 @@ const JSON_SCHEMA_RESPONSE_FORMAT = {
   },
 };
 
-// ---------------------------------------------------------------------------
-// Cache mémoire (clé = version du prompt + texte masqué)
-// ---------------------------------------------------------------------------
+// Cache mémoire indexé par la clé de cache complète.
 const cacheMemoire = new Map<string, LLMOutput>();
 
 // Clé de cache : version du prompt, système, modèle et texte masqué.
@@ -72,17 +65,13 @@ function modeleActif(): string {
   }
 }
 
-/**
- * Construit un nom de fichier de cache disque sécurisé à partir de la clé.
- */
+// Chemin du fichier de cache disque dérivé par hachage SHA-256 de la clé.
 function diskCachePath(cacheKey: string): string {
   const hash = crypto.createHash("sha256").update(cacheKey).digest("hex");
   return path.join(process.cwd(), "eval", "cache", `${hash}.json`);
 }
 
-/**
- * Lit le cache disque si activé.
- */
+// Lit l'entrée du cache disque si l'option est activée et le fichier valide.
 function readDiskCache(cacheKey: string): LLMOutput | null {
   if (!isDiskCacheEnabled()) return null;
   const filePath = diskCachePath(cacheKey);
@@ -97,9 +86,7 @@ function readDiskCache(cacheKey: string): LLMOutput | null {
   return null;
 }
 
-/**
- * Écrit dans le cache disque si activé.
- */
+// Enregistre le résultat dans le cache disque si activé.
 function writeDiskCache(cacheKey: string, output: LLMOutput): void {
   if (!isDiskCacheEnabled()) return;
   const filePath = diskCachePath(cacheKey);
@@ -114,13 +101,7 @@ function writeDiskCache(cacheKey: string, output: LLMOutput): void {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Client LLM
-// ---------------------------------------------------------------------------
-
-/**
- * Crée un client OpenAI compatible pour une configuration donnée.
- */
+// Crée un client OpenAI compatible sans relance automatique interne.
 function createClient(config: LLMConfig): OpenAI {
   return new OpenAI({
     baseURL: config.baseUrl,
@@ -130,9 +111,7 @@ function createClient(config: LLMConfig): OpenAI {
   });
 }
 
-/**
- * Détermine si l'erreur est une erreur récupérable (429 ou 5xx).
- */
+// Détermine si une erreur HTTP (429 ou 5xx) justifie une nouvelle tentative.
 function isRetryableError(error: unknown): boolean {
   if (error instanceof OpenAI.APIError) {
     return error.status === 429 || (error.status !== undefined && error.status >= 500);
@@ -140,21 +119,12 @@ function isRetryableError(error: unknown): boolean {
   return false;
 }
 
-/**
- * Petite pause exponentielle.
- */
+// Pause asynchrone avant relance d'appel.
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// ---------------------------------------------------------------------------
-// Appel LLM avec relance et bascule
-// ---------------------------------------------------------------------------
-
-/**
- * Effectue l'appel au modèle et retourne le contenu brut de la réponse.
- * IMPORTANT : Ne journalise jamais le texte des messages.
- */
+// Effectue l'appel au modèle sans jamais journaliser le texte des messages.
 async function callLLM(
   config: LLMConfig,
   systemPrompt: string,
@@ -180,13 +150,7 @@ async function callLLM(
   return content;
 }
 
-/**
- * Stratégie d'appel :
- * 1. Tenter le fournisseur principal
- * 2. En cas d'erreur 429/5xx : attendre 1,5 s puis relancer une fois
- * 3. Si la relance échoue : basculer sur le fournisseur de secours (s'il est configuré)
- * 4. Si tout échoue : lever une erreur propre
- */
+// Tente l'appel principal, relance après 1,5 s sur 429/5xx, puis bascule sur le secours.
 async function callWithRetryAndFallback(
   systemPrompt: string,
   userMessage: string
@@ -225,9 +189,7 @@ async function callWithRetryAndFallback(
   return await callLLM(fallbackConfig, systemPrompt, userMessage);
 }
 
-// ---------------------------------------------------------------------------
-// Sortie par défaut en cas d'échec de validation
-// ---------------------------------------------------------------------------
+// Sortie de repli par précaution si l'analyse échoue complètement.
 const FALLBACK_OUTPUT: LLMOutput = {
   niveau: "suspect",
   signaux: ["Analyse automatique non concluante"],
@@ -241,24 +203,7 @@ export function estSortieDeRepli(sortie: LLMOutput): boolean {
   return sortie === FALLBACK_OUTPUT;
 }
 
-// ---------------------------------------------------------------------------
-// Point d'entrée public
-// ---------------------------------------------------------------------------
-
-/**
- * Analyse un message masqué à l'aide d'un LLM avec :
- * - Cache mémoire (et disque optionnel pour l'évaluation)
- * - Validation Zod stricte de la sortie
- * - Relance et bascule de fournisseur sur erreur 429/5xx
- *
- * IMPORTANT : Le texte des messages n'est JAMAIS journalisé.
- *
- * @param texteMasque Message préalablement anonymisé
- * @param signauxRegles Signaux identifiés par le moteur de règles
- * @param arnaquesProches Arnaques similaires trouvées dans le corpus
- * @param conduiteIds Liste des identifiants de conduites autorisées
- * @returns Promesse contenant la sortie validée par Zod
- */
+/** Analyse un message masqué via LLM avec cache, validation Zod et repli de sécurité. */
 export async function analyzeWithLLM(
   texteMasque: string,
   signauxRegles: SignalRegle[] = [],
@@ -319,7 +264,5 @@ export async function analyzeWithLLM(
   }
 }
 
-/**
- * Réexporte la version du prompt pour l'usage dans le route handler.
- */
+/** Réexporte la version du prompt pour l'usage dans le route handler. */
 export { VERSION_PROMPT } from "@/lib/prompt";
